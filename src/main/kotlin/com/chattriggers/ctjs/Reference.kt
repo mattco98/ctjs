@@ -1,6 +1,6 @@
 package com.chattriggers.ctjs
 
-import com.chattriggers.ctjs.commands.DynamicCommand
+import com.chattriggers.ctjs.commands.DynamicCommands
 import com.chattriggers.ctjs.commands.StaticCommand
 import com.chattriggers.ctjs.console.ConsoleManager
 import com.chattriggers.ctjs.engine.Register
@@ -32,7 +32,7 @@ object Reference {
         ConsoleManager.clearConsoles()
         Register.clearCustomTriggers()
         StaticCommand.unregisterAll()
-        DynamicCommand.unregisterAll()
+        DynamicCommands.unregisterAll()
 
         Client.scheduleTask {
             CTJS.images.forEach(Image::destroy)

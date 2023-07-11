@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.utils
 
 import com.chattriggers.ctjs.commands.CTCommand
-import com.chattriggers.ctjs.commands.DynamicCommand
+import com.chattriggers.ctjs.commands.DynamicCommands
 import com.chattriggers.ctjs.commands.StaticCommand
 import com.chattriggers.ctjs.engine.module.ModuleUpdater
 import com.chattriggers.ctjs.minecraft.listeners.ClientListener
@@ -21,7 +21,7 @@ internal interface Initializer {
             CTCommand,
             ConsoleManager,
             CPS,
-            DynamicCommand,
+            DynamicCommands,
             Image,
             KeyBind,
             ModuleUpdater,

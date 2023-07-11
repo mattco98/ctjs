@@ -23,7 +23,7 @@ interface Command {
     fun registerImpl(): Registration
 
     data class Registration(
-        val names: Set<String>,
+        val name: String,
         val builder: (String) -> LiteralArgumentBuilder<FabricClientCommandSource>,
     )
 }
@@ -31,7 +31,7 @@ interface Command {
 @InternalApi
 abstract class CommandCollection : Initializer {
     private var dispatcher: CommandDispatcher<FabricClientCommandSource>? = null
-    private val activeCommands = mutableMapOf<Command, Set<String>>()
+    private val activeCommands = mutableMapOf<Command, String>()
     private val pendingCommands = mutableSetOf<Command>()
 
     override fun init() {
@@ -43,25 +43,20 @@ abstract class CommandCollection : Initializer {
         }
     }
 
-    fun register(command: Command) {
+    fun register(command: Command): LiteralCommandNode<FabricClientCommandSource>? {
         if (dispatcher == null) {
             pendingCommands.add(command)
-            return
+            return null
         }
 
-        val registeredNames = mutableSetOf<String>()
-        val (names, builder) = command.registerImpl()
-        for (name in names) {
-            if (command.hasConflict(name)) {
-                existingCommandWarning(name).printToConsole(JSLoader.console, LogType.WARN)
-            } else {
-                val node = dispatcher!!.register(builder(name))
-
-                registeredNames.add(name)
-            }
+        val (name, builder) = command.registerImpl()
+        return if (command.hasConflict(name)) {
+            existingCommandWarning(name).printToConsole(JSLoader.console, LogType.WARN)
+            null
+        } else {
+            activeCommands[command] = name
+            dispatcher!!.register(builder(name))
         }
-
-        activeCommands[command] = registeredNames
     }
 
     fun unregister(command: Command) {
@@ -80,7 +75,7 @@ abstract class CommandCollection : Initializer {
 
     fun unregisterAll() {
         pendingCommands.clear()
-        activeCommands.keys.forEach(::unregister)
+        activeCommands.keys.toList().forEach(::unregister)
         activeCommands.clear()
     }
 

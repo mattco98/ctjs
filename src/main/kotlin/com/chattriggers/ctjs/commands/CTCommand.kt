@@ -100,7 +100,9 @@ internal object CTCommand : Initializer {
             )
             .onExecute { ChatLib.chat(getUsage()) }
 
-        dispatcher.register(command)
+        val n = dispatcher.register(command)
+
+        dispatcher.register(literal("ct2").redirect(n))
     }
 
     private fun import(moduleName: String) {
