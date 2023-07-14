@@ -14,7 +14,7 @@ import java.util.List;
 @Mixin(ClientCommandSource.class)
 public abstract class ClientCommandSourceMixin implements CTClientCommandSource {
     @Unique
-    private HashMap<String, Object> contextValues;
+    private final HashMap<String, Object> contextValues = new HashMap<>();
 
     @Override
     public void setValue(@NotNull String key, @NotNull Object value) {

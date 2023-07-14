@@ -5,10 +5,13 @@ import com.chattriggers.ctjs.minecraft.CTEvents.VoidCallback
 import com.chattriggers.ctjs.utils.MCBlockEntity
 import com.chattriggers.ctjs.utils.MCBlockPos
 import com.chattriggers.ctjs.utils.MCEntity
+import com.mojang.brigadier.CommandDispatcher
+import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.event.EventFactory
 import net.minecraft.client.gui.Drawable
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.util.math.MatrixStack
+import net.minecraft.command.CommandSource
 import net.minecraft.network.packet.Packet
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo
 
@@ -59,6 +62,10 @@ internal object CTEvents {
 
     fun interface BreakBlockCallback {
         fun breakBlock(pos: MCBlockPos)
+    }
+
+    fun interface CommandDispatcherRegisterCallback {
+        fun register(dispatcher: CommandDispatcher<FabricClientCommandSource>)
     }
 
     @JvmField
@@ -138,6 +145,13 @@ internal object CTEvents {
     val BREAK_BLOCK = make<BreakBlockCallback> { listeners ->
         BreakBlockCallback { pos ->
             listeners.forEach { it.breakBlock(pos) }
+        }
+    }
+
+    @JvmField
+    val COMMAND_DISPATCHER_REGISTER = make<CommandDispatcherRegisterCallback> { listeners ->
+        CommandDispatcherRegisterCallback { dispatcher ->
+            listeners.forEach { it.register(dispatcher) }
         }
     }
 

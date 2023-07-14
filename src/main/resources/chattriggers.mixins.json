@@ -52,5 +52,8 @@
     "injectors": {
         "defaultRequire": 1
     },
-    "plugin": "com.chattriggers.ctjs.launch.CTMixinPlugin"
+    "plugin": "com.chattriggers.ctjs.launch.CTMixinPlugin",
+    "mixins": [
+        "CommandNodeAccessor"
+    ]
 }

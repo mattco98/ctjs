@@ -37,25 +37,14 @@ object DynamicCommand {
         class Redirect(parent: Node?, val target: Root, val modifier: Function? = null) : Node(parent)
 
         fun initialize(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
-            when (this) {
-                is Literal -> {
-                    builder = ClientCommandManager.literal(name)
-                    parent?.builder?.then(builder)
-                }
-                is Argument -> {
-                    builder = ClientCommandManager.argument(name, type)
-                    parent?.builder?.then(builder)
-                }
-                is Redirect -> {
-                    target.initialize(dispatcher)
-                    parent!!.builder!!.redirect(target.commandNode) {
-                        if (modifier != null)
-                            JSLoader.invoke(modifier, arrayOf(it.source))
-                        it.source
-                    }
-                }
+            builder = when (this) {
+                is Literal -> ClientCommandManager.literal(name)
+                is Argument -> ClientCommandManager.argument(name, type)
+                is Redirect -> null
             }
 
+            // The call to .then() below builds a node which check the command, so we
+            // need to call .execute() before then if necessary
             if (method != null) {
                 val arguments = allArguments()
                 builder!!.executes { ctx ->
@@ -68,6 +57,21 @@ object DynamicCommand {
                     1
                 }
             }
+
+            when (this) {
+                is Literal, is Argument -> parent?.builder?.then(builder)
+                is Redirect -> {
+                    target.initialize(dispatcher)
+                    parent!!.builder!!.redirect(target.commandNode) {
+                        if (modifier != null)
+                            JSLoader.invoke(modifier, arrayOf(it.source))
+                        it.source
+                    }
+                }
+            }
+
+            for (child in children)
+                child.initialize(dispatcher)
 
             if (this is Root)
                 commandNode = dispatcher.register(builder!! as LiteralArgumentBuilder<FabricClientCommandSource>)

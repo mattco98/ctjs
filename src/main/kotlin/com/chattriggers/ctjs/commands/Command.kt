@@ -3,13 +3,17 @@ package com.chattriggers.ctjs.commands
 import com.chattriggers.ctjs.console.LogType
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.engine.js.JSLoader
+import com.chattriggers.ctjs.minecraft.wrappers.Client
+import com.chattriggers.ctjs.mixins.CommandNodeAccessor
 import com.chattriggers.ctjs.utils.Initializer
 import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.utils.asMixin
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
+import net.minecraft.command.CommandSource
 
 @InternalApi
 interface Command {
@@ -21,23 +25,29 @@ interface Command {
 
 @InternalApi
 abstract class CommandCollection : Initializer {
-    var dispatcher: CommandDispatcher<FabricClientCommandSource>? = null
-        private set
-
-    private val activeCommands = mutableMapOf<Command, String>()
+    private val activeCommands = mutableSetOf<Command>()
     private val pendingCommands = mutableSetOf<Command>()
+
+    private var clientDispatcher: CommandDispatcher<FabricClientCommandSource>? = null
+
+    @Suppress("UNCHECKED_CAST")
+    private val dispatchers: List<CommandDispatcher<FabricClientCommandSource>>
+        get() = listOfNotNull(
+            clientDispatcher,
+            Client.getMinecraft().networkHandler?.commandDispatcher as CommandDispatcher<FabricClientCommandSource>,
+        )
 
     override fun init() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            this.dispatcher = dispatcher
-            activeCommands.keys.forEach(::register)
+            this.clientDispatcher = dispatcher
+            activeCommands.forEach(::register)
             pendingCommands.forEach(::register)
             pendingCommands.clear()
         }
     }
 
     fun register(command: Command) {
-        val dispatcher = this.dispatcher ?: run {
+        if (clientDispatcher == null) {
             pendingCommands.add(command)
             return
         }
@@ -45,29 +55,33 @@ abstract class CommandCollection : Initializer {
         if (command.hasConflict(command.name)) {
             existingCommandWarning(command.name).printToConsole(JSLoader.console, LogType.WARN)
         } else {
-            activeCommands[command] = command.name
-            command.register(dispatcher)
+            activeCommands.add(command)
+            dispatchers.forEach {
+                command.register(it)
+            }
         }
     }
 
     fun unregister(command: Command) {
-        if (command in pendingCommands) {
-            pendingCommands.remove(command)
-            return
-        }
-
-        val names = activeCommands[command]!!
-        dispatcher!!.root.children.removeIf {
-            it.name in names
-        }
-
-        activeCommands.remove(command)
+        unregisterImpl(setOf(command))
     }
 
     fun unregisterAll() {
-        pendingCommands.clear()
-        activeCommands.keys.toList().forEach(::unregister)
-        activeCommands.clear()
+        unregisterImpl(pendingCommands + activeCommands)
+    }
+
+    private fun unregisterImpl(commands: Set<Command>) {
+        val names = commands.mapTo(mutableSetOf(), Command::name)
+        pendingCommands.removeAll(commands)
+        activeCommands.removeAll(commands)
+
+        for (dispatcher in listOfNotNull(clientDispatcher, Client.getMinecraft().networkHandler?.commandDispatcher)) {
+            dispatcher.root.apply {
+                children.removeIf { it.name in names }
+                for (name in names)
+                    asMixin<CommandNodeAccessor>().literals.remove(name)
+            }
+        }
     }
 
     fun <S, T : ArgumentBuilder<S, T>> ArgumentBuilder<S, T>.onExecute(block: (CommandContext<S>) -> Unit): T = this.executes {
@@ -75,7 +89,7 @@ abstract class CommandCollection : Initializer {
         1
     }
 
-    private fun Command.hasConflict(name: String) = !overrideExisting && dispatcher!!.root.getChild(name) != null
+    private fun Command.hasConflict(name: String) = !overrideExisting && clientDispatcher!!.root.getChild(name) != null
 
     private fun existingCommandWarning(name: String) =
         """
