@@ -4,7 +4,6 @@ import com.chattriggers.ctjs.console.LogType
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.minecraft.CTEvents
-import com.chattriggers.ctjs.minecraft.wrappers.Client
 import com.chattriggers.ctjs.mixins.CommandNodeAccessor
 import com.chattriggers.ctjs.utils.Initializer
 import com.chattriggers.ctjs.utils.InternalApi
@@ -15,8 +14,6 @@ import com.mojang.brigadier.context.CommandContext
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayConnectionEvents
-import net.fabricmc.fabric.impl.command.client.ClientCommandInternals
-import net.minecraft.command.CommandSource
 
 @InternalApi
 interface Command {
@@ -32,23 +29,40 @@ abstract class CommandCollection : Initializer {
     private val pendingCommands = mutableSetOf<Command>()
 
     private var clientDispatcher: CommandDispatcher<FabricClientCommandSource>? = null
+    private var networkDispatcher: CommandDispatcher<FabricClientCommandSource>? = null
+    private var commandsRegistered = false
 
     override fun init() {
+        ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
+            networkDispatcher = dispatcher
+            tryRegisterPendingCommands()
+        }
+
         CTEvents.COMMAND_DISPATCHER_REGISTER.register { dispatcher ->
-            clientDispatcher = dispatcher
-            activeCommands.forEach(::register)
-            pendingCommands.forEach(::register)
-            pendingCommands.clear()
+            networkDispatcher = dispatcher
+            tryRegisterPendingCommands()
         }
 
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
             unregisterImpl(pendingCommands + activeCommands)
             clientDispatcher = null
+            networkDispatcher = null
+            commandsRegistered = false
+        }
+    }
+
+    private fun tryRegisterPendingCommands() {
+        require(!commandsRegistered)
+
+        if (clientDispatcher != null && networkDispatcher != null) {
+            commandsRegistered = true
+            pendingCommands.forEach(::register)
+            pendingCommands.clear()
         }
     }
 
     fun register(command: Command) {
-        if (clientDispatcher == null) {
+        if (!commandsRegistered) {
             pendingCommands.add(command)
             return
         }
@@ -58,6 +72,7 @@ abstract class CommandCollection : Initializer {
         } else {
             activeCommands.add(command)
             command.register(clientDispatcher!!)
+            command.register(networkDispatcher!!)
         }
     }
 
@@ -70,24 +85,27 @@ abstract class CommandCollection : Initializer {
         pendingCommands.removeAll(commands)
         activeCommands.removeAll(commands)
 
-        clientDispatcher?.root?.apply {
-            children.removeIf { it.name in names }
-            for (name in names)
-                asMixin<CommandNodeAccessor>().literals.remove(name)
+        for (dispatcher in listOf(clientDispatcher, networkDispatcher)) {
+            dispatcher?.root?.apply {
+                children.removeIf { it.name in names }
+                for (name in names)
+                    asMixin<CommandNodeAccessor>().literals.remove(name)
+            }
         }
     }
 
-    fun <S, T : ArgumentBuilder<S, T>> ArgumentBuilder<S, T>.onExecute(block: (CommandContext<S>) -> Unit): T = this.executes {
-        block(it)
-        1
-    }
+    fun <S, T : ArgumentBuilder<S, T>> ArgumentBuilder<S, T>.onExecute(block: (CommandContext<S>) -> Unit): T =
+        this.executes {
+            block(it)
+            1
+        }
 
     private fun Command.hasConflict(name: String) = !overrideExisting && clientDispatcher!!.root.getChild(name) != null
 
     private fun existingCommandWarning(name: String) =
         """
-                Command with name $name already exists! This will not override the 
-                other command with the same name. To override the other command, set the 
-                overrideExisting flag in setName() (the second argument) to true.
-            """.trimIndent().replace("\n", "")
+        Command with name $name already exists! This will not override the 
+        other command with the same name. To override the other command, set the 
+        overrideExisting flag in setName() (the second argument) to true.
+        """.trimIndent().replace("\n", "")
 }
