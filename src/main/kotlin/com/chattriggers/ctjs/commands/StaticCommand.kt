@@ -13,8 +13,8 @@ internal class StaticCommand(
     private val dynamicSuggestions: ((List<String>) -> List<String>)?,
 ) : Command {
     override fun registerImpl(): Command.Registration {
-        return Command.Registration(names.toList()[0]) {
-            literal(it)
+        return Command.Registration(names.toList()[0]) { name, _ ->
+            literal(name)
                 .then(argument("args", StringArgumentType.greedyString())
                     .suggests { ctx, builder ->
                         val suggestions = if (dynamicSuggestions != null) {

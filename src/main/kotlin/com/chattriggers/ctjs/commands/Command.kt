@@ -24,13 +24,15 @@ interface Command {
 
     data class Registration(
         val name: String,
-        val builder: (String) -> LiteralArgumentBuilder<FabricClientCommandSource>,
+        val builder: (String, CommandDispatcher<FabricClientCommandSource>) -> LiteralArgumentBuilder<FabricClientCommandSource>,
     )
 }
 
 @InternalApi
 abstract class CommandCollection : Initializer {
-    private var dispatcher: CommandDispatcher<FabricClientCommandSource>? = null
+    var dispatcher: CommandDispatcher<FabricClientCommandSource>? = null
+        private set
+
     private val activeCommands = mutableMapOf<Command, String>()
     private val pendingCommands = mutableSetOf<Command>()
 
@@ -44,7 +46,7 @@ abstract class CommandCollection : Initializer {
     }
 
     fun register(command: Command): LiteralCommandNode<FabricClientCommandSource>? {
-        if (dispatcher == null) {
+        val dispatcher = this.dispatcher ?: run {
             pendingCommands.add(command)
             return null
         }
@@ -55,7 +57,7 @@ abstract class CommandCollection : Initializer {
             null
         } else {
             activeCommands[command] = name
-            dispatcher!!.register(builder(name))
+            dispatcher.register(builder(name, dispatcher))
         }
     }
 
