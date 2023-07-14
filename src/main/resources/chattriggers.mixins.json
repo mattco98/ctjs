@@ -19,6 +19,7 @@
         "ClientConnectionMixin",
         "ClientPlayerEntityMixin",
         "ClientPlayerInteractionManagerMixin",
+        "ClientPlayNetworkHandlerMixin",
         "ClientWorldAccessor",
         "CreativeInventoryScreenMixin",
         "EntityRenderDispatcherAccessor",

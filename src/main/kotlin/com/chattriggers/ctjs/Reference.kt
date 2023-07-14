@@ -31,8 +31,6 @@ object Reference {
         KeyBind.clearKeyBinds()
         ConsoleManager.clearConsoles()
         Register.clearCustomTriggers()
-        StaticCommand.unregisterAll()
-        DynamicCommands.unregisterAll()
 
         Client.scheduleTask {
             CTJS.images.forEach(Image::destroy)
