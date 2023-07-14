@@ -8,20 +8,15 @@ import com.chattriggers.ctjs.minecraft.wrappers.entity.PlayerMP
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockFace
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockPos
 import com.chattriggers.ctjs.utils.MCEntity
-import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.ImmutableStringReader
 import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.*
-import com.mojang.brigadier.builder.ArgumentBuilder
-import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType
 import com.mojang.brigadier.suggestion.Suggestions
 import com.mojang.brigadier.suggestion.SuggestionsBuilder
 import com.mojang.brigadier.tree.LiteralCommandNode
 import gg.essential.universal.wrappers.message.UTextComponent
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import net.minecraft.block.pattern.CachedBlockPosition
 import net.minecraft.command.EntitySelector
@@ -29,7 +24,6 @@ import net.minecraft.command.argument.BlockPosArgumentType
 import net.minecraft.command.argument.BlockPredicateArgumentType
 import net.minecraft.command.argument.BlockStateArgument
 import net.minecraft.command.argument.BlockStateArgumentType
-import net.minecraft.command.argument.DimensionArgumentType
 import net.minecraft.command.argument.EntityAnchorArgumentType
 import net.minecraft.command.argument.EntityArgumentType
 import net.minecraft.command.argument.GameModeArgumentType
@@ -50,7 +44,6 @@ import net.minecraft.util.math.Vec3d
 import org.mozilla.javascript.Function
 import org.mozilla.javascript.NativeObject
 import org.mozilla.javascript.WrappedException
-import java.util.EnumSet
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiConsumer
@@ -64,54 +57,49 @@ import kotlin.math.min
  * @see buildCommand
  */
 object DynamicCommands : CommandCollection() {
-    private var currentBuilder: CommandBuilder? = null
+    private var currentNode: DynamicCommand.Node? = null
 
     @JvmStatic
-    fun buildCommand(name: String, builder: Function): LiteralCommandNode<FabricClientCommandSource>? {
-        require(currentBuilder == null) { "Command.buildCommand() called while already building a command" }
-        val context = pushContext { JSLoader.invoke(builder, emptyArray()) }
-        return register(CommandImpl(name, context))
+    fun buildCommand(name: String, builder: Function): DynamicCommand.Node {
+        require(currentNode == null) { "Command.buildCommand() called while already building a command" }
+        val node = DynamicCommand.Node.Root(name)
+        processNode(node, builder)
+        return node
     }
 
     @JvmStatic
     fun argument(name: String, type: ArgumentType<Any>, builder: Function) {
-        requireNotNull(currentBuilder) { "Call to Commands.argument() outside of Commands.buildCommand()" }
-        val nestedContext = pushContext { JSLoader.invoke(builder, emptyArray()) }
-        currentBuilder!!.children.add(CommandBuilder.Argument(name, type, nestedContext))
+        requireNotNull(currentNode) { "Call to Commands.argument() outside of Commands.buildCommand()" }
+        require(!currentNode!!.hasRedirect) { "Cannot redirect node with children" }
+        val node = DynamicCommand.Node.Argument(currentNode, name, type)
+        processNode(node, builder)
+        currentNode!!.children.add(node)
     }
 
     @JvmStatic
     fun literal(name: String, builder: Function) {
-        requireNotNull(currentBuilder) { "Call to Commands.literal() outside of Commands.buildCommand()" }
-        val nestedContext = pushContext { JSLoader.invoke(builder, emptyArray()) }
-        currentBuilder!!.children.add(CommandBuilder.Literal(name, nestedContext))
+        requireNotNull(currentNode) { "Call to Commands.literal() outside of Commands.buildCommand()" }
+        require(!currentNode!!.hasRedirect) { "Cannot redirect node with children" }
+        val node = DynamicCommand.Node.Literal(currentNode, name)
+        processNode(node, builder)
+        currentNode!!.children.add(node)
     }
 
     @JvmStatic
     @JvmOverloads
-    fun redirect(node: LiteralCommandNode<FabricClientCommandSource>, modifier: Function? = null) {
-        requireNotNull(currentBuilder) { "Call to Commands.redirect() outside of Commands.buildCommand()" }
-        require(currentBuilder!!.redirect == null) { "Duplicate call to Commands.redirect()" }
-        currentBuilder!!.redirect = CommandBuilder.CommandNodeRedirectTarget(node)
-    }
-
-    @JvmStatic
-    @JvmOverloads
-    fun redirect(rootTarget: CommandBuilder.RootRedirectTarget, modifier: Function? = null) {
-        requireNotNull(currentBuilder) { "Call to Commands.redirect() outside of Commands.buildCommand()" }
-        require(currentBuilder!!.redirect == null) { "Duplicate call to Commands.redirect()" }
-        currentBuilder!!.redirect = rootTarget
+    fun redirect(node: DynamicCommand.Node.Root, modifier: Function? = null) {
+        requireNotNull(currentNode) { "Call to Commands.redirect() outside of Commands.buildCommand()" }
+        require(!currentNode!!.hasRedirect) { "Duplicate call to Commands.redirect()" }
+        currentNode!!.children.add(DynamicCommand.Node.Redirect(currentNode, node, modifier))
+        currentNode!!.hasRedirect = true
     }
 
     @JvmStatic
     fun exec(method: Function) {
-        requireNotNull(currentBuilder) { "Call to Commands.argument() outside of Commands.buildCommand()" }
-        require(currentBuilder!!.method == null) { "Duplicate call ot Commands.exec()" }
-        currentBuilder!!.method = method
+        requireNotNull(currentNode) { "Call to Commands.argument() outside of Commands.buildCommand()" }
+        require(currentNode!!.method == null) { "Duplicate call ot Commands.exec()" }
+        currentNode!!.method = method
     }
-
-    @JvmStatic
-    fun getRoot() = CommandBuilder.RootRedirectTarget
 
     @JvmStatic
     fun boolean(): BoolArgumentType = BoolArgumentType.bool()
@@ -189,17 +177,6 @@ object DynamicCommands : CommandCollection() {
 
     @JvmStatic
     fun gameMode() = GameModeArgumentType.gameMode()
-
-    // @JvmStatic
-    // fun dimension() = wrapArgument(DimensionArgumentType.dimension()) {
-    //     when (it.path) {
-    //         "minecraft:overworld" -> Entity.DimensionType.OVERWORLD
-    //         "minecraft:the_nether" -> Entity.DimensionType.NETHER
-    //         "minecraft:the_end" -> Entity.DimensionType.END
-    //         "minecraft:overworld_caves" -> Entity.DimensionType.OVERWORLD_CAVES
-    //         else -> error("Unknown dimension \"${it.path}\"")
-    //     }
-    // }
 
     @JvmStatic
     fun choices(vararg options: String) = object : ArgumentType<String> {
@@ -491,80 +468,12 @@ object DynamicCommands : CommandCollection() {
         return { field.get(it) as FieldT }
     }
 
-    private fun pushContext(block: () -> Unit): CommandBuilder {
-        val newContext = CommandBuilder(currentBuilder)
-        currentBuilder = newContext
+    private fun processNode(node: DynamicCommand.Node, builder: Function) {
+        currentNode = node
         try {
-            block()
+            JSLoader.invoke(builder, emptyArray())
         } finally {
-            currentBuilder = newContext.parent
-        }
-        return newContext
-    }
-
-    class CommandBuilder(val parent: CommandBuilder?) {
-        val children = mutableListOf<Child>()
-        var method: Function? = null
-        var redirect: RedirectTarget? = null
-
-        fun allArguments() = generateSequence(this.parent) { it.parent }.flatMap {
-            it.children.filterIsInstance<Argument>().asReversed()
-        }.toList().asReversed()
-
-        sealed class Child(val name: String, val nestedContext: CommandBuilder)
-
-        class Argument(name: String, val type: ArgumentType<Any>, nestedContext: CommandBuilder) : Child(name, nestedContext)
-
-        class Literal(name: String, nestedContext: CommandBuilder) : Child(name, nestedContext)
-
-        sealed interface RedirectTarget
-
-        class CommandNodeRedirectTarget(val node: LiteralCommandNode<FabricClientCommandSource>) : RedirectTarget
-
-        object RootRedirectTarget : RedirectTarget
-    }
-
-    private class CommandImpl(private val name: String, private val commandBuilder: CommandBuilder) : Command {
-        override val overrideExisting = false
-
-        override fun registerImpl(): Command.Registration {
-            return Command.Registration(name) { name, dispatcher ->
-                val node = LiteralArgumentBuilder.literal<FabricClientCommandSource>(name)
-                applyCommandNode(node, commandBuilder, dispatcher)
-                node
-            }
-        }
-
-        private fun applyCommandNode(
-            base: ArgumentBuilder<FabricClientCommandSource, *>,
-            commandBuilder: CommandBuilder,
-            dispatcher: CommandDispatcher<FabricClientCommandSource>,
-        ) {
-            if (commandBuilder.redirect != null) {
-                require(commandBuilder.children.isEmpty()) { "Cannot redirect node with children" }
-                when (val redirect = commandBuilder.redirect!!) {
-                    is CommandBuilder.CommandNodeRedirectTarget -> base.redirect(redirect.node)
-                    CommandBuilder.RootRedirectTarget -> base.redirect(dispatcher.root)
-                }
-            } else {
-                for (child in commandBuilder.children) {
-                    val newBuilder = when (child) {
-                        is CommandBuilder.Literal -> literal(child.name)
-                        is CommandBuilder.Argument -> argument(child.name, child.type)
-                    }
-                    applyCommandNode(newBuilder, child.nestedContext, dispatcher)
-                    base.then(newBuilder)
-                }
-            }
-
-            if (commandBuilder.method != null) {
-                val args = commandBuilder.allArguments()
-                base.executes { ctx ->
-                    val argValues = Array(args.size) { i -> ctx.getArgument(args[i].name, Any::class.java) }
-                    JSLoader.invoke(commandBuilder.method!!, argValues)
-                    1
-                }
-            }
+            currentNode = node.parent
         }
     }
 }

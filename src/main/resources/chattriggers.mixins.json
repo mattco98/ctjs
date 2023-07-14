@@ -15,6 +15,7 @@
         "ClickableWidgetAccessor",
         "ClientChunkManagerAccessor",
         "ClientChunkMapAccessor",
+        "ClientCommandSourceMixin",
         "ClientConnectionMixin",
         "ClientPlayerEntityMixin",
         "ClientPlayerInteractionManagerMixin",

@@ -7,25 +7,16 @@ import com.chattriggers.ctjs.utils.Initializer
 import com.chattriggers.ctjs.utils.InternalApi
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.ArgumentBuilder
-import com.mojang.brigadier.builder.LiteralArgumentBuilder
 import com.mojang.brigadier.context.CommandContext
-import com.mojang.brigadier.tree.CommandNode
-import com.mojang.brigadier.tree.LiteralCommandNode
-import com.mojang.brigadier.tree.RootCommandNode
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 
 @InternalApi
 interface Command {
     val overrideExisting: Boolean
+    val name: String
 
-    // Do not call this method! Instead, call the register() method in this command's CommandCollection
-    fun registerImpl(): Registration
-
-    data class Registration(
-        val name: String,
-        val builder: (String, CommandDispatcher<FabricClientCommandSource>) -> LiteralArgumentBuilder<FabricClientCommandSource>,
-    )
+    fun register(dispatcher: CommandDispatcher<FabricClientCommandSource>)
 }
 
 @InternalApi
@@ -45,19 +36,17 @@ abstract class CommandCollection : Initializer {
         }
     }
 
-    fun register(command: Command): LiteralCommandNode<FabricClientCommandSource>? {
+    fun register(command: Command) {
         val dispatcher = this.dispatcher ?: run {
             pendingCommands.add(command)
-            return null
+            return
         }
 
-        val (name, builder) = command.registerImpl()
-        return if (command.hasConflict(name)) {
-            existingCommandWarning(name).printToConsole(JSLoader.console, LogType.WARN)
-            null
+        if (command.hasConflict(command.name)) {
+            existingCommandWarning(command.name).printToConsole(JSLoader.console, LogType.WARN)
         } else {
-            activeCommands[command] = name
-            dispatcher.register(builder(name, dispatcher))
+            activeCommands[command] = command.name
+            command.register(dispatcher)
         }
     }
 
