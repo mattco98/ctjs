@@ -2,28 +2,33 @@ package com.chattriggers.ctjs.commands
 
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.CTClientCommandSource
+import com.chattriggers.ctjs.mixins.CommandContextAccessor
 import com.chattriggers.ctjs.utils.asMixin
 import com.mojang.brigadier.CommandDispatcher
+import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.ArgumentType
 import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.builder.LiteralArgumentBuilder
+import com.mojang.brigadier.context.CommandContext
+import com.mojang.brigadier.context.CommandContextBuilder
+import com.mojang.brigadier.exceptions.CommandSyntaxException
+import com.mojang.brigadier.suggestion.Suggestions
+import com.mojang.brigadier.suggestion.SuggestionsBuilder
+import com.mojang.brigadier.tree.CommandNode
 import com.mojang.brigadier.tree.LiteralCommandNode
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import org.mozilla.javascript.Function
 import org.mozilla.javascript.NativeObject
 import org.mozilla.javascript.ScriptableObject
+import java.util.concurrent.CompletableFuture
 
 object DynamicCommand {
     sealed class Node(val parent: Node?) {
         var method: Function? = null
         var hasRedirect = false
         val children = mutableListOf<Node>()
-
         var builder: ArgumentBuilder<FabricClientCommandSource, *>? = null
-
-        private fun allArguments() = generateSequence(this) { it.parent }
-            .filterIsInstance<Argument>().toList().asReversed()
 
         open class Literal(parent: Node?, val name: String) : Node(parent)
 
@@ -44,11 +49,13 @@ object DynamicCommand {
                 check(method == null)
                 check(children.isEmpty())
                 target.initialize(dispatcher)
+
                 parent!!.builder!!.redirect(target.commandNode) {
                     if (modifier != null)
                         JSLoader.invoke(modifier, arrayOf(it.source))
                     it.source
                 }
+
                 return
             }
 
@@ -61,16 +68,15 @@ object DynamicCommand {
             // The call to .then() below builds a node which check the command, so we
             // need to call .execute() and child..initialize() before then if necessary
             if (method != null) {
-                val arguments = allArguments()
                 builder!!.executes { ctx ->
                     val obj = NativeObject()
 
-                    for ((key, value) in ctx.source.asMixin<CTClientCommandSource>().values)
-                        ScriptableObject.putConstProperty(obj, key, value)
+                    for ((key, value) in ctx.source.asMixin<CTClientCommandSource>().contextValues)
+                        ScriptableObject.putProperty(obj, key, value)
+                    for ((key, arg) in ctx.asMixin<CommandContextAccessor>().arguments)
+                        ScriptableObject.putProperty(obj, key, arg.result)
 
-                    arguments.forEach {
-                        ScriptableObject.putConstProperty(obj, it.name, ctx.getArgument(it.name, Any::class.java))
-                    }
+                    ctx.source.asMixin<CTClientCommandSource>().contextValues.clear()
 
                     JSLoader.invoke(method!!, arrayOf(obj))
                     1

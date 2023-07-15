@@ -1,5 +1,6 @@
 package com.chattriggers.ctjs.commands
 
+import com.chattriggers.ctjs.CTClientCommandSource
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.minecraft.wrappers.Player
 import com.chattriggers.ctjs.minecraft.wrappers.World
@@ -7,7 +8,9 @@ import com.chattriggers.ctjs.minecraft.wrappers.entity.Entity
 import com.chattriggers.ctjs.minecraft.wrappers.entity.PlayerMP
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockFace
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockPos
+import com.chattriggers.ctjs.mixins.CommandContextAccessor
 import com.chattriggers.ctjs.utils.MCEntity
+import com.chattriggers.ctjs.utils.asMixin
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.ImmutableStringReader
 import com.mojang.brigadier.StringReader
@@ -40,9 +43,8 @@ import net.minecraft.util.TypeFilter
 import net.minecraft.util.math.Box
 import net.minecraft.util.math.Vec2f
 import net.minecraft.util.math.Vec3d
+import org.mozilla.javascript.*
 import org.mozilla.javascript.Function
-import org.mozilla.javascript.NativeObject
-import org.mozilla.javascript.WrappedException
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
 import java.util.function.BiConsumer
@@ -92,7 +94,23 @@ object DynamicCommands : CommandCollection() {
     fun redirect(node: DynamicCommand.Node.Root, modifier: Function? = null) {
         requireNotNull(currentNode) { "Call to Commands.redirect() outside of Commands.buildCommand()" }
         require(!currentNode!!.hasRedirect) { "Duplicate call to Commands.redirect()" }
-        currentNode!!.children.add(DynamicCommand.Node.Redirect(currentNode, node, modifier))
+
+        val redirectModifier = modifier ?: object : BaseFunction() {
+            override fun call(cx: Context, scope: Scriptable, thisObj: Scriptable, args: Array<out Any>): Any {
+                check(args.size == 1)
+                val ctx = args[0]
+                check(ctx is CommandContext<*>)
+                val source = ctx.source
+                check(source is CTClientCommandSource)
+
+                for ((name, arg) in source.asMixin<CommandContextAccessor>().arguments)
+                    source.setContextValue(name, arg.result)
+
+                return Undefined.instance
+            }
+        }
+
+        currentNode!!.children.add(DynamicCommand.Node.Redirect(currentNode, node, redirectModifier))
         currentNode!!.hasRedirect = true
     }
 
