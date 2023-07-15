@@ -132,7 +132,7 @@
     // Misc
     loadInstance("com.chattriggers.ctjs.utils.Config");
     loadInstance("com.chattriggers.ctjs.Reference", "ChatTriggers");
-    loadInstance("com.chattriggers.ctjs.commands.DynamicCommands", "Commands");
+    loadClass("com.chattriggers.ctjs.commands.DynamicCommands", "Commands");
     /*End Built in Vars */
 
     // GL

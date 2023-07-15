@@ -11,6 +11,8 @@ import com.mojang.brigadier.tree.LiteralCommandNode
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
 import org.mozilla.javascript.Function
+import org.mozilla.javascript.NativeObject
+import org.mozilla.javascript.ScriptableObject
 
 object DynamicCommand {
     sealed class Node(val parent: Node?) {
@@ -20,7 +22,8 @@ object DynamicCommand {
 
         var builder: ArgumentBuilder<FabricClientCommandSource, *>? = null
 
-        fun allArguments() = generateSequence(this) { it.parent }.filterIsInstance<Argument>().toList().asReversed()
+        private fun allArguments() = generateSequence(this) { it.parent }
+            .filterIsInstance<Argument>().toList().asReversed()
 
         open class Literal(parent: Node?, val name: String) : Node(parent)
 
@@ -37,49 +40,52 @@ object DynamicCommand {
         class Redirect(parent: Node?, val target: Root, val modifier: Function? = null) : Node(parent)
 
         fun initialize(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
+            if (this is Redirect) {
+                check(method == null)
+                check(children.isEmpty())
+                target.initialize(dispatcher)
+                parent!!.builder!!.redirect(target.commandNode) {
+                    if (modifier != null)
+                        JSLoader.invoke(modifier, arrayOf(it.source))
+                    it.source
+                }
+                return
+            }
+
             builder = when (this) {
                 is Literal -> ClientCommandManager.literal(name)
                 is Argument -> ClientCommandManager.argument(name, type)
-                is Redirect -> null
+                else -> throw IllegalStateException("unreachable")
             }
 
             // The call to .then() below builds a node which check the command, so we
-            // need to call .execute() before then if necessary
+            // need to call .execute() and child..initialize() before then if necessary
             if (method != null) {
                 val arguments = allArguments()
                 builder!!.executes { ctx ->
-                    val argMap = ctx.source.asMixin<CTClientCommandSource>().values
+                    val obj = NativeObject()
+
+                    for ((key, value) in ctx.source.asMixin<CTClientCommandSource>().values)
+                        ScriptableObject.putConstProperty(obj, key, value)
+
                     arguments.forEach {
-                        argMap[it.name] = ctx.getArgument(it.name, Any::class.java)
+                        ScriptableObject.putConstProperty(obj, it.name, ctx.getArgument(it.name, Any::class.java))
                     }
 
-                    JSLoader.invoke(method!!, arrayOf(argMap))
+                    JSLoader.invoke(method!!, arrayOf(obj))
                     1
-                }
-            }
-
-            when (this) {
-                is Literal, is Argument -> parent?.builder?.then(builder)
-                is Redirect -> {
-                    target.initialize(dispatcher)
-                    parent!!.builder!!.redirect(target.commandNode) {
-                        if (modifier != null)
-                            JSLoader.invoke(modifier, arrayOf(it.source))
-                        it.source
-                    }
                 }
             }
 
             for (child in children)
                 child.initialize(dispatcher)
 
-            if (this is Root)
-                commandNode = dispatcher.register(builder!! as LiteralArgumentBuilder<FabricClientCommandSource>)
+            parent?.builder?.then(builder)
         }
     }
 
     class CommandImpl(private val node: Node.Root) : Command {
-        override val overrideExisting = false
+        override val overrideExisting = true
         override val name = node.name
 
         override fun register(dispatcher: CommandDispatcher<FabricClientCommandSource>) {

@@ -9,6 +9,9 @@ import java.util.Map;
 
 @Mixin(CommandNode.class)
 public interface CommandNodeAccessor {
+    @Accessor("children")
+    Map<String, CommandNode<?>> getChildNodes();
+
     @Accessor
     Map<String, LiteralCommandNode<?>> getLiterals();
 }

@@ -23,6 +23,9 @@ import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.argument
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager.literal
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource
+import net.minecraft.command.argument.EntityAnchorArgumentType
+import net.minecraft.command.argument.EntityArgumentType
+import net.minecraft.command.argument.SwizzleArgumentType
 import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import java.io.IOException
@@ -101,6 +104,15 @@ internal object CTCommand : Initializer {
             .onExecute { ChatLib.chat(getUsage()) }
 
         dispatcher.register(command)
+
+        val node = dispatcher.register(literal("ctexecute2"))
+
+        val node2 = dispatcher.register(
+            literal("ctexecute2")
+                .then(literal("align").then(argument("align", SwizzleArgumentType.swizzle()).redirect(node)))
+                .then(literal("anchored").then(argument("anchored", EntityAnchorArgumentType.entityAnchor()).redirect(node)))
+                .then(literal("as").then(argument("targets", EntityArgumentType.entity()).redirect(node)))
+        )
     }
 
     private fun import(moduleName: String) {

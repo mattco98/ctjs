@@ -25,82 +25,60 @@ interface Command {
 
 @InternalApi
 abstract class CommandCollection : Initializer {
-    private val activeCommands = mutableSetOf<Command>()
-    private val pendingCommands = mutableSetOf<Command>()
+    private val allCommands = mutableSetOf<Command>()
 
     private var clientDispatcher: CommandDispatcher<FabricClientCommandSource>? = null
     private var networkDispatcher: CommandDispatcher<FabricClientCommandSource>? = null
-    private var commandsRegistered = false
 
     override fun init() {
         ClientCommandRegistrationCallback.EVENT.register { dispatcher, _ ->
-            networkDispatcher = dispatcher
-            tryRegisterPendingCommands()
+            clientDispatcher = dispatcher
+            allCommands.forEach { it.register(dispatcher) }
         }
 
         CTEvents.COMMAND_DISPATCHER_REGISTER.register { dispatcher ->
             networkDispatcher = dispatcher
-            tryRegisterPendingCommands()
+            allCommands.forEach { it.register(dispatcher) }
         }
 
         ClientPlayConnectionEvents.DISCONNECT.register { _, _ ->
-            unregisterImpl(pendingCommands + activeCommands)
             clientDispatcher = null
             networkDispatcher = null
-            commandsRegistered = false
-        }
-    }
-
-    private fun tryRegisterPendingCommands() {
-        require(!commandsRegistered)
-
-        if (clientDispatcher != null && networkDispatcher != null) {
-            commandsRegistered = true
-            pendingCommands.forEach(::register)
-            pendingCommands.clear()
         }
     }
 
     fun register(command: Command) {
-        if (!commandsRegistered) {
-            pendingCommands.add(command)
-            return
-        }
-
-        if (command.hasConflict(command.name)) {
+        allCommands.add(command)
+        if (clientDispatcher.hasConflict(command) || networkDispatcher.hasConflict(command)) {
             existingCommandWarning(command.name).printToConsole(JSLoader.console, LogType.WARN)
         } else {
-            activeCommands.add(command)
-            command.register(clientDispatcher!!)
-            command.register(networkDispatcher!!)
+            clientDispatcher?.let { command.register(it) }
+            networkDispatcher?.let { command.register(it) }
         }
     }
 
     fun unregister(command: Command) {
-        unregisterImpl(setOf(command))
-    }
-
-    private fun unregisterImpl(commands: Set<Command>) {
-        val names = commands.mapTo(mutableSetOf(), Command::name)
-        pendingCommands.removeAll(commands)
-        activeCommands.removeAll(commands)
-
-        for (dispatcher in listOf(clientDispatcher, networkDispatcher)) {
-            dispatcher?.root?.apply {
-                children.removeIf { it.name in names }
-                for (name in names)
-                    asMixin<CommandNodeAccessor>().literals.remove(name)
+        for (dispatcher in listOfNotNull(clientDispatcher, networkDispatcher)) {
+            dispatcher.root.asMixin<CommandNodeAccessor>().apply {
+                childNodes.remove(command.name)
+                literals.remove(command.name)
             }
         }
     }
 
+    fun unregisterAll() {
+        allCommands.forEach(::unregister)
+        allCommands.clear()
+    }
+
     fun <S, T : ArgumentBuilder<S, T>> ArgumentBuilder<S, T>.onExecute(block: (CommandContext<S>) -> Unit): T =
-        this.executes {
+        executes {
             block(it)
             1
         }
 
-    private fun Command.hasConflict(name: String) = !overrideExisting && clientDispatcher!!.root.getChild(name) != null
+    private fun CommandDispatcher<*>?.hasConflict(command: Command) =
+        !command.overrideExisting && (this?.root?.getChild(command.name) != null)
 
     private fun existingCommandWarning(name: String) =
         """

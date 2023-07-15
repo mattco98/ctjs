@@ -8,6 +8,7 @@ import com.chattriggers.ctjs.minecraft.wrappers.entity.PlayerMP
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockFace
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockPos
 import com.chattriggers.ctjs.utils.MCEntity
+import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.ImmutableStringReader
 import com.mojang.brigadier.StringReader
 import com.mojang.brigadier.arguments.*
@@ -51,17 +52,20 @@ import kotlin.math.min
 /**
  * An alternative to the command register that allows full use of the
  * functionality provided by Brigadier.
- *
- * @see buildCommand
  */
 object DynamicCommands : CommandCollection() {
     private var currentNode: DynamicCommand.Node? = null
 
     @JvmStatic
-    fun buildCommand(name: String, builder: Function): DynamicCommand.Node {
+    fun registerCommand(name: String, builder: Function) = buildCommand(name, builder).register()
+
+    @JvmStatic
+    @JvmOverloads
+    fun buildCommand(name: String, builder: Function? = null): DynamicCommand.Node.Root {
         require(currentNode == null) { "Command.buildCommand() called while already building a command" }
         val node = DynamicCommand.Node.Root(name)
-        processNode(node, builder)
+        if (builder != null)
+            processNode(node, builder)
         return node
     }
 
@@ -95,7 +99,8 @@ object DynamicCommands : CommandCollection() {
     @JvmStatic
     fun exec(method: Function) {
         requireNotNull(currentNode) { "Call to Commands.argument() outside of Commands.buildCommand()" }
-        require(currentNode!!.method == null) { "Duplicate call ot Commands.exec()" }
+        require(!currentNode!!.hasRedirect) { "Cannot execute node with children" }
+        require(currentNode!!.method == null) { "Duplicate call to Commands.exec()" }
         currentNode!!.method = method
     }
 
@@ -171,29 +176,62 @@ object DynamicCommands : CommandCollection() {
     fun players() = wrapArgument(EntityArgumentType.players()) { EntitySelectorWrapper(it).getPlayers() }
 
     @JvmStatic
+    fun gameProfile() = players()
+
+    @JvmStatic
     fun identifier() = IdentifierArgumentType.identifier()
 
     @JvmStatic
     fun gameMode() = GameModeArgumentType.gameMode()
 
     @JvmStatic
-    fun choices(vararg options: String) = object : ArgumentType<String> {
-        override fun parse(reader: StringReader): String {
-            val str = reader.readString()
-            if (str in options)
-                return str
-            error(reader, "Expected one of: ${options.joinToString(", ")}")
+    fun choices(vararg options: String): ArgumentType<String> {
+        require(options.isNotEmpty()) {
+            "No strings passed to Commands.choices()"
+        }
+        require(options.all { CommandDispatcher.ARGUMENT_SEPARATOR_CHAR !in it }) {
+            "Commands.choices() cannot accept strings with spaces"
+        }
+        require(options.none(String::isEmpty)) {
+            "Commands.choices() cannot accept empty strings"
         }
 
-        override fun <S : Any?> listSuggestions(
-            context: CommandContext<S>,
-            builder: SuggestionsBuilder
-        ): CompletableFuture<Suggestions> {
-            options.forEach(builder::suggest)
-            return builder.buildFuture()
-        }
+        return object : ArgumentType<String> {
+            override fun parse(reader: StringReader): String {
+                val start = reader.cursor
+                val optionChars = options.toMutableList()
 
-        override fun getExamples(): MutableCollection<String> = options.toMutableList()
+                var offset = 0
+                while (reader.canRead()) {
+                    val ch = reader.read()
+                    optionChars.removeIf { it[offset] != ch }
+                    if (optionChars.isEmpty())
+                        reader.fail(start)
+                    offset += 1
+
+                    val found = optionChars.find { it.length == offset }
+                    if (found != null)
+                        return found
+                }
+
+                reader.fail(start)
+            }
+
+            override fun <S : Any?> listSuggestions(
+                context: CommandContext<S>,
+                builder: SuggestionsBuilder
+            ): CompletableFuture<Suggestions> {
+                options.forEach(builder::suggest)
+                return builder.buildFuture()
+            }
+
+            override fun getExamples(): MutableCollection<String> = options.toMutableList()
+
+            private fun StringReader.fail(originalOffset: Int): Nothing {
+                cursor = originalOffset
+                error(this, "Expected one of: ${options.joinToString(", ")}")
+            }
+        }
     }
 
     @JvmStatic
