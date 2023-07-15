@@ -59,7 +59,10 @@ object DynamicCommands : CommandCollection() {
     private var currentNode: DynamicCommand.Node? = null
 
     @JvmStatic
-    fun registerCommand(name: String, builder: Function) = buildCommand(name, builder).register()
+    @JvmOverloads
+    fun registerCommand(name: String, builder: Function? = null) = buildCommand(name, builder).also {
+        it.register()
+    }
 
     @JvmStatic
     @JvmOverloads
@@ -90,27 +93,10 @@ object DynamicCommands : CommandCollection() {
     }
 
     @JvmStatic
-    @JvmOverloads
-    fun redirect(node: DynamicCommand.Node.Root, modifier: Function? = null) {
+    fun redirect(node: DynamicCommand.Node.Root) {
         requireNotNull(currentNode) { "Call to Commands.redirect() outside of Commands.buildCommand()" }
         require(!currentNode!!.hasRedirect) { "Duplicate call to Commands.redirect()" }
-
-        val redirectModifier = modifier ?: object : BaseFunction() {
-            override fun call(cx: Context, scope: Scriptable, thisObj: Scriptable, args: Array<out Any>): Any {
-                check(args.size == 1)
-                val ctx = args[0]
-                check(ctx is CommandContext<*>)
-                val source = ctx.source
-                check(source is CTClientCommandSource)
-
-                for ((name, arg) in source.asMixin<CommandContextAccessor>().arguments)
-                    source.setContextValue(name, arg.result)
-
-                return Undefined.instance
-            }
-        }
-
-        currentNode!!.children.add(DynamicCommand.Node.Redirect(currentNode, node, redirectModifier))
+        currentNode!!.children.add(DynamicCommand.Node.Redirect(currentNode, node))
         currentNode!!.hasRedirect = true
     }
 

@@ -42,7 +42,7 @@ object DynamicCommand {
 
         class Argument(parent: Node?, val name: String, val type: ArgumentType<*>) : Node(parent)
 
-        class Redirect(parent: Node?, val target: Root, val modifier: Function? = null) : Node(parent)
+        class Redirect(parent: Node?, val target: Root) : Node(parent)
 
         fun initialize(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
             if (this is Redirect) {
@@ -51,8 +51,8 @@ object DynamicCommand {
                 target.initialize(dispatcher)
 
                 parent!!.builder!!.redirect(target.commandNode) {
-                    if (modifier != null)
-                        JSLoader.invoke(modifier, arrayOf(it.source))
+                    for ((name, arg) in it.asMixin<CommandContextAccessor>().arguments)
+                        it.source.asMixin<CTClientCommandSource>().setContextValue(name, arg.result)
                     it.source
                 }
 

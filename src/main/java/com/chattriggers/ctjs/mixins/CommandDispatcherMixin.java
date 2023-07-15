@@ -30,7 +30,11 @@ public class CommandDispatcherMixin {
         @Local(ordinal = 1) CommandContextBuilder<S> context
     ) {
         if (context.getCommand() == null && child.getRedirect() != null && child.getRedirect().getCommand() != null) {
-            
+            // TODO: If there is a redirect modifier, this fix will ignore it. In case vanilla or other
+            //       mods depend on this, don't apply this patch if this is the case. This makes sure
+            //       this patch is purely additive. Fixing this would probably require creating a dummy
+            //       ContextBuilder with a dummy CommandNode and changing the logic in
+            //       CommandDispatcher::execute.
             context.withCommand(child.getRedirect().getCommand());
         }
     }
