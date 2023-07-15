@@ -34,6 +34,7 @@
         "KeyBindingAccessor",
         "MinecraftClientMixin",
         "MouseMixin",
+        "NarratorMixin",
         "NbtCompoundAccessor",
         "ParticleAccessor",
         "ParticleManagerMixin",
