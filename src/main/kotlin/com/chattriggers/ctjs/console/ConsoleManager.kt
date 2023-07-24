@@ -51,6 +51,6 @@ object ConsoleManager : Initializer {
     }
 
     fun closeConsoles() {
-        consoles.forEach(Console::close)
+        consoles.forEach(Console::terminate)
     }
 }

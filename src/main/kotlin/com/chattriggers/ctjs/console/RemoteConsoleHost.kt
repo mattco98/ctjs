@@ -125,8 +125,8 @@ class RemoteConsoleHost(private val loader: JSLoader?) : Console {
 
     override fun show() = trySendMessage(OpenMessage)
 
-    override fun close() {
-        trySendMessage(CloseMessage)
+    override fun terminate() {
+        trySendMessage(TerminateMessage)
         process.destroy()
     }
 

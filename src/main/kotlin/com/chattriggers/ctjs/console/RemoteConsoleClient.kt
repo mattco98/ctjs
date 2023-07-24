@@ -6,6 +6,7 @@ import java.awt.Color
 import java.io.*
 import java.net.Socket
 import java.util.concurrent.CompletableFuture
+import kotlin.system.exitProcess
 
 /**
  * Runs in a separate process and is responsible for rendering the CT consoles.
@@ -64,9 +65,7 @@ class RemoteConsoleClient(private val port: Int) {
                     OpenMessage -> {
                         frame?.showConsole() ?: error("Received OpenMessage before InitMessage")
                     }
-                    CloseMessage -> {
-                        frame?.close() ?: error("Received CloseMessage before InitMessage")
-                    }
+                    TerminateMessage -> exitProcess(0)
                     ClearConsoleMessage -> {
                         frame?.clearConsole() ?: error("Received ClearConsoleMessage before InitMessage")
                     }
