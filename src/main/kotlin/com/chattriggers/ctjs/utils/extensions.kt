@@ -3,6 +3,7 @@
 package com.chattriggers.ctjs.utils
 
 import com.chattriggers.ctjs.launch.Descriptor
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.fasterxml.jackson.core.Version
 import net.minecraft.util.Identifier
 import net.minecraft.util.math.MathHelper

@@ -2,7 +2,7 @@ package com.chattriggers.ctjs.minecraft.wrappers
 
 import com.chattriggers.ctjs.minecraft.CTEvents
 import com.chattriggers.ctjs.utils.Initializer
-import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import java.util.*
 import kotlin.math.max

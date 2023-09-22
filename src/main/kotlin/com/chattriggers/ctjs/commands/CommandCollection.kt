@@ -4,10 +4,8 @@ import com.chattriggers.ctjs.console.LogType
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.minecraft.CTEvents
-import com.chattriggers.ctjs.mixins.commands.CommandNodeAccessor
 import com.chattriggers.ctjs.utils.Initializer
-import com.chattriggers.ctjs.utils.InternalApi
-import com.chattriggers.ctjs.utils.asMixin
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.builder.ArgumentBuilder
 import com.mojang.brigadier.context.CommandContext

@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.commands
 
 import com.chattriggers.ctjs.mixins.commands.CommandNodeAccessor
-import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.chattriggers.ctjs.utils.asMixin
 import com.mojang.brigadier.CommandDispatcher
 import net.fabricmc.fabric.api.client.command.v2.FabricClientCommandSource

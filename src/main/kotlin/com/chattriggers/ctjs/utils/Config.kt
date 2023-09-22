@@ -2,6 +2,7 @@ package com.chattriggers.ctjs.utils
 
 import com.chattriggers.ctjs.CTJS
 import com.chattriggers.ctjs.console.ConsoleManager
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import gg.essential.vigilance.Vigilant
 import gg.essential.vigilance.data.Property
 import gg.essential.vigilance.data.PropertyType

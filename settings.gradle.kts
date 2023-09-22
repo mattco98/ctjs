@@ -24,3 +24,4 @@ providers.gradleProperty("supportedMcVersions").get().split(",").forEach { versi
 }
 
 rootProject.buildFileName = "root.gradle.kts"
+include(":typing-generator")

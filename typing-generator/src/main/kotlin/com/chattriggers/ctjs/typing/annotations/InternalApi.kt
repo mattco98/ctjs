@@ -1,4 +1,4 @@
-package com.chattriggers.ctjs.utils
+package com.chattriggers.ctjs.typing.annotations
 
 @InternalApi
 @Target(AnnotationTarget.CLASS, AnnotationTarget.FUNCTION, AnnotationTarget.FILE)

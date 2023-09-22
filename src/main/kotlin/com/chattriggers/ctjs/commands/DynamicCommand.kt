@@ -3,7 +3,7 @@ package com.chattriggers.ctjs.commands
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.CTClientCommandSource
 import com.chattriggers.ctjs.mixins.commands.CommandContextAccessor
-import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.chattriggers.ctjs.utils.asMixin
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.ArgumentType

@@ -8,7 +8,7 @@ import com.chattriggers.ctjs.mixins.KeyBindingAccessor
 import com.chattriggers.ctjs.triggers.RegularTrigger
 import com.chattriggers.ctjs.triggers.TriggerType
 import com.chattriggers.ctjs.utils.Initializer
-import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.chattriggers.ctjs.utils.asMixin
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
 import net.minecraft.client.option.KeyBinding

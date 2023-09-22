@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.triggers
 
 import com.chattriggers.ctjs.engine.js.JSLoader
-import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 
 sealed interface ITriggerType {
     val name: String

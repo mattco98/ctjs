@@ -2,7 +2,7 @@ package com.chattriggers.ctjs.triggers
 
 import com.chattriggers.ctjs.Reference
 import com.chattriggers.ctjs.engine.js.JSLoader
-import com.chattriggers.ctjs.utils.InternalApi
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 
 abstract class Trigger protected constructor(
     var method: Any,

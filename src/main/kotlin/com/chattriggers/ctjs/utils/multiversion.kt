@@ -2,6 +2,7 @@
 
 package com.chattriggers.ctjs.utils
 
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import net.minecraft.client.util.math.MatrixStack
 
 //#if MC>=12000

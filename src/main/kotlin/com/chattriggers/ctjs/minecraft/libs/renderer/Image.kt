@@ -1,10 +1,7 @@
 package com.chattriggers.ctjs.minecraft.libs.renderer
 
 import com.chattriggers.ctjs.CTJS
-import com.chattriggers.ctjs.minecraft.CTEvents
 import com.chattriggers.ctjs.minecraft.wrappers.Client
-import com.chattriggers.ctjs.utils.Initializer
-import com.chattriggers.ctjs.utils.InternalApi
 import net.minecraft.client.texture.NativeImage
 import net.minecraft.client.texture.NativeImageBackedTexture
 import org.lwjgl.system.MemoryUtil

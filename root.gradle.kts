@@ -1,3 +1,5 @@
+import com.chattriggers.ctjs.gradle.internalPackages
+
 plugins {
     kotlin("jvm") version "1.8.21" apply false
     id("io.github.juuxel.loom-quiltflower") version "1.10.0" apply false
@@ -13,12 +15,6 @@ preprocess {
 }
 
 apiValidation {
-    ignoredPackages.add("com.chattriggers.ctjs.console")
-    ignoredPackages.add("com.chattriggers.ctjs.engine.js")
-    ignoredPackages.add("com.chattriggers.ctjs.engine.module")
-    ignoredPackages.add("com.chattriggers.ctjs.launch")
-    ignoredPackages.add("com.chattriggers.ctjs.minecraft.listeners")
-    ignoredPackages.add("com.chattriggers.ctjs.mixins")
-
-    nonPublicMarkers.add("com.chattriggers.ctjs.utils.InternalApi")
+    ignoredPackages.addAll(internalPackages)
+    nonPublicMarkers.add("com.chattriggers.ctjs.typing.annotations.InternalApi")
 }
