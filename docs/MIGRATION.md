@@ -188,6 +188,8 @@ Here is a list of targeted changes for various different APIs:
 - `Client`
   - `getChatGUI` was renamed to `getChatGui` to match the naming of `getTabGui`
 - Removed `Config.modulesFolder`. Use `ChatTriggers.MODULES_FOLDER` or the string `"./config/ChatTriggers/modules"`
+- Thread
+  - Removed all instance methods except `start()` (note: The global `Thread` object isn't actually `java.lang.Thread`)
 - Provided JS API: 
   - Split `print` into `print` and `println`. `print` will no longer emit a trailing newline
 

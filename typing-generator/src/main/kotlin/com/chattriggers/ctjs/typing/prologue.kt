@@ -87,7 +87,6 @@ internal val globals = mapOf(
     "GL43" to null,
     "GL44" to null,
     "GL45" to null,
-    "CancellableEvent" to "com.chattriggers.ctjs.trigger.CancellableEvent",
 )
 
 private val staticPrologue = """
