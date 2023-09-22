@@ -1,4 +1,4 @@
-package com.chattriggers.ctjs.console
+package com.chattriggers.ctjs.console.impl
 
 import java.awt.Color
 import java.io.PrintWriter

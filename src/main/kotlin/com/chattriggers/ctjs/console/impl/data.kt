@@ -1,4 +1,4 @@
-package com.chattriggers.ctjs.console
+package com.chattriggers.ctjs.console.impl
 
 import com.chattriggers.ctjs.utils.Config
 import kotlinx.serialization.Serializable

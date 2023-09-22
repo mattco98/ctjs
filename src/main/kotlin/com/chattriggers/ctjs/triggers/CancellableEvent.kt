@@ -1,4 +1,4 @@
-package com.chattriggers.ctjs.minecraft.listeners
+package com.chattriggers.ctjs.triggers
 
 open class CancellableEvent {
     private var cancelled = false

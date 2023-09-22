@@ -349,7 +349,7 @@ object Player {
         Renderer.drawPlayer(obj)
     }
 
-    class ArmorWrapper {
+    class ArmorWrapper internal constructor() {
         /**
          * @return the [Item] in the player's helmet slot or null if the slot is empty
          */
@@ -369,5 +369,19 @@ object Player {
          * @return the [Item] in the player's boots slot or null if the slot is empty
          */
         fun getBoots(): Item? = getInventory()?.getStackInSlot(36)
+    }
+
+    /**
+     * Represents an action taken by the client player
+     */
+    sealed class Interaction(val name: String, val mainHand: Boolean) {
+        object AttackBlock : Interaction("AttackBlock", true)
+        object AttackEntity : Interaction("AttackEntity", true)
+        object BreakBlock : Interaction("BreakBlock", true)
+        class UseBlock(hand: Hand) : Interaction("UseBlock", hand == Hand.MAIN_HAND)
+        class UseEntity(hand: Hand) : Interaction("UseEntity", hand == Hand.MAIN_HAND)
+        class UseItem(hand: Hand) : Interaction("UseItem", hand == Hand.MAIN_HAND)
+
+        override fun toString(): String = name
     }
 }

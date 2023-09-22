@@ -17,6 +17,7 @@ import com.chattriggers.ctjs.utils.Initializer
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.engine.module.ModuleManager
 import com.chattriggers.ctjs.minecraft.objects.TextComponent
+import com.chattriggers.ctjs.minecraft.wrappers.Player
 import com.chattriggers.ctjs.minecraft.wrappers.Scoreboard
 import com.chattriggers.ctjs.minecraft.wrappers.inventory.Item
 import com.chattriggers.ctjs.utils.toMatrixStack
@@ -36,11 +37,9 @@ import net.fabricmc.fabric.api.event.player.UseItemCallback
 import net.minecraft.client.util.math.MatrixStack
 import net.minecraft.text.Text
 import net.minecraft.util.ActionResult
-import net.minecraft.util.Hand
 import net.minecraft.util.TypedActionResult
 import org.lwjgl.glfw.GLFW
 import org.mozilla.javascript.Context
-import java.util.concurrent.CopyOnWriteArrayList
 
 object ClientListener : Initializer {
     private var ticksPassed: Int = 0
@@ -177,7 +176,7 @@ object ClientListener : Initializer {
             val event = CancellableEvent()
 
             TriggerType.PLAYER_INTERACT.triggerAll(
-                PlayerInteraction.AttackBlock,
+                Player.Interaction.AttackBlock,
                 World.getBlockAt(BlockPos(pos)).withFace(BlockFace.fromMC(direction)),
                 event,
             )
@@ -190,7 +189,7 @@ object ClientListener : Initializer {
             val event = CancellableEvent()
 
             TriggerType.PLAYER_INTERACT.triggerAll(
-                PlayerInteraction.AttackEntity,
+                Player.Interaction.AttackEntity,
                 Entity.fromMC(entity),
                 event,
             )
@@ -200,7 +199,7 @@ object ClientListener : Initializer {
 
         CTEvents.BREAK_BLOCK.register { pos ->
             TriggerType.PLAYER_INTERACT.triggerAll(
-                PlayerInteraction.BreakBlock,
+                Player.Interaction.BreakBlock,
                 World.getBlockAt(BlockPos(pos)),
                 CancellableEvent(),
             )
@@ -211,7 +210,7 @@ object ClientListener : Initializer {
             val event = CancellableEvent()
 
             TriggerType.PLAYER_INTERACT.triggerAll(
-                PlayerInteraction.UseBlock(hand),
+                Player.Interaction.UseBlock(hand),
                 World.getBlockAt(BlockPos(hitResult.blockPos)).withFace(BlockFace.fromMC(hitResult.side)),
                 event,
             )
@@ -224,7 +223,7 @@ object ClientListener : Initializer {
             val event = CancellableEvent()
 
             TriggerType.PLAYER_INTERACT.triggerAll(
-                PlayerInteraction.UseEntity(hand),
+                Player.Interaction.UseEntity(hand),
                 Entity.fromMC(entity),
                 event,
             )
@@ -239,7 +238,7 @@ object ClientListener : Initializer {
             val stack = player.getStackInHand(hand)
 
             TriggerType.PLAYER_INTERACT.triggerAll(
-                PlayerInteraction.UseItem(hand),
+                Player.Interaction.UseItem(hand),
                 Item.fromMC(stack),
                 event,
             )
@@ -288,14 +287,4 @@ object ClientListener : Initializer {
         Renderer.popMatrix()
     }
 
-    sealed class PlayerInteraction(val name: String, val mainHand: Boolean) {
-        object AttackBlock : PlayerInteraction("AttackBlock", true)
-        object AttackEntity : PlayerInteraction("AttackEntity", true)
-        object BreakBlock : PlayerInteraction("BreakBlock", true)
-        class UseBlock(hand: Hand) : PlayerInteraction("UseBlock", hand == Hand.MAIN_HAND)
-        class UseEntity(hand: Hand) : PlayerInteraction("UseEntity", hand == Hand.MAIN_HAND)
-        class UseItem(hand: Hand) : PlayerInteraction("UseItem", hand == Hand.MAIN_HAND)
-
-        override fun toString(): String = name
-    }
 }

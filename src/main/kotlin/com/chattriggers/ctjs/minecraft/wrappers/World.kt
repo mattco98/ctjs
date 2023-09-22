@@ -204,7 +204,7 @@ object World {
     /**
      * World border object to get border parameters
      */
-    class BorderWrapper {
+    class BorderWrapper internal constructor() {
         /**
          * Gets the border center x location.
          *
@@ -244,7 +244,7 @@ object World {
     /**
      * World spawn object for getting spawn location.
      */
-    class SpawnWrapper {
+    class SpawnWrapper internal constructor() {
         /**
          * Gets the spawn x location.
          *
@@ -267,7 +267,7 @@ object World {
         fun getZ(): Int = toMC()!!.spawnPos.z
     }
 
-    class ParticleWrapper {
+    class ParticleWrapper internal constructor() {
         /**
          * Gets an array of all the different particle names you can pass
          * to [spawnParticle]

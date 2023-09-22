@@ -13,6 +13,7 @@ import com.chattriggers.ctjs.minecraft.wrappers.inventory.nbt.NBTTagCompound
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockFace
 import com.chattriggers.ctjs.minecraft.wrappers.world.block.BlockPos
 import com.chattriggers.ctjs.mixins.commands.EntitySelectorAccessor
+import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.chattriggers.ctjs.utils.MCEntity
 import com.chattriggers.ctjs.utils.MCNbtCompound
 import com.chattriggers.ctjs.utils.asMixin

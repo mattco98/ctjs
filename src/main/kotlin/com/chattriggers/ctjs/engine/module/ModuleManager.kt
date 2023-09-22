@@ -2,7 +2,7 @@ package com.chattriggers.ctjs.engine.module
 
 import com.chattriggers.ctjs.CTJS
 import com.chattriggers.ctjs.Reference
-import com.chattriggers.ctjs.console.LogType
+import com.chattriggers.ctjs.console.impl.LogType
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.engine.js.JSContextFactory
 import com.chattriggers.ctjs.engine.js.JSLoader

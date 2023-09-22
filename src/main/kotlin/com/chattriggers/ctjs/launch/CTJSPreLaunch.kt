@@ -1,6 +1,6 @@
 package com.chattriggers.ctjs.launch
 
-import com.chattriggers.ctjs.console.LogType
+import com.chattriggers.ctjs.console.impl.LogType
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.console.printTraceToConsole
 import net.fabricmc.loader.api.entrypoint.PreLaunchEntrypoint

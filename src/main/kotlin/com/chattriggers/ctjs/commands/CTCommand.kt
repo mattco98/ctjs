@@ -3,7 +3,7 @@ package com.chattriggers.ctjs.commands
 import com.chattriggers.ctjs.Reference
 import com.chattriggers.ctjs.commands.StaticCommand.Companion.onExecute
 import com.chattriggers.ctjs.compat.Migration
-import com.chattriggers.ctjs.console.ConsoleManager
+import com.chattriggers.ctjs.console.impl.ConsoleManager
 import com.chattriggers.ctjs.console.printTraceToConsole
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.engine.module.ModuleManager
@@ -32,7 +32,6 @@ import net.minecraft.text.ClickEvent
 import net.minecraft.text.HoverEvent
 import java.io.File
 import java.io.IOException
-import java.nio.file.Files
 import kotlin.concurrent.thread
 
 internal object CTCommand : Initializer {

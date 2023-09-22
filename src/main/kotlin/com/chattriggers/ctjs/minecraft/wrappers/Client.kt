@@ -287,7 +287,7 @@ object Client {
                 ?.let(::KeyBind)
     }
 
-    class CurrentGuiWrapper {
+    class CurrentGuiWrapper internal constructor() {
         /**
          * Gets the Java class name of the currently open gui, for example, "GuiChest"
          *
@@ -328,7 +328,7 @@ object Client {
         }
     }
 
-    class CameraWrapper {
+    class CameraWrapper internal constructor() {
         fun getX(): Double = getMinecraft().gameRenderer.camera.pos.x
 
         fun getY(): Double = getMinecraft().gameRenderer.camera.pos.y

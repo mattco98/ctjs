@@ -1,6 +1,8 @@
 package com.chattriggers.ctjs.engine.js
 
 import com.chattriggers.ctjs.console.*
+import com.chattriggers.ctjs.console.impl.ConsoleManager
+import com.chattriggers.ctjs.console.impl.LogType
 import com.chattriggers.ctjs.engine.MixinDetails
 import com.chattriggers.ctjs.engine.module.Module
 import com.chattriggers.ctjs.engine.module.ModuleManager.modulesFolder
@@ -11,7 +13,6 @@ import com.chattriggers.ctjs.triggers.Trigger
 import com.chattriggers.ctjs.triggers.ITriggerType
 import org.apache.commons.io.FileUtils
 import org.mozilla.javascript.*
-import org.mozilla.javascript.Function
 import org.mozilla.javascript.commonjs.module.ModuleScriptProvider
 import org.mozilla.javascript.commonjs.module.Require
 import org.mozilla.javascript.commonjs.module.provider.StrongCachingModuleScriptProvider

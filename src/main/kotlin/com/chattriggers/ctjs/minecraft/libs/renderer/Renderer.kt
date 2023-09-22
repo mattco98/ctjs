@@ -853,7 +853,7 @@ object Renderer {
         }
     }
 
-    class ScreenWrapper {
+    class ScreenWrapper internal constructor() {
         fun getWidth(): Int = UMinecraft.getMinecraft().window.scaledWidth
 
         fun getHeight(): Int = UMinecraft.getMinecraft().window.scaledHeight

@@ -1,6 +1,6 @@
 package com.chattriggers.ctjs
 
-import com.chattriggers.ctjs.console.*
+import com.chattriggers.ctjs.console.impl.ConsoleManager
 import com.chattriggers.ctjs.engine.module.ModuleManager
 import com.chattriggers.ctjs.minecraft.libs.renderer.Image
 import com.chattriggers.ctjs.minecraft.objects.Sound

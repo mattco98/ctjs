@@ -1,6 +1,8 @@
-package com.chattriggers.ctjs.engine.js
+package com.chattriggers.ctjs.engine
 
 import com.chattriggers.ctjs.console.printTraceToConsole
+import com.chattriggers.ctjs.engine.js.JSContextFactory
+import com.chattriggers.ctjs.engine.js.JSLoader
 import org.mozilla.javascript.Context
 import java.util.concurrent.ForkJoinPool
 

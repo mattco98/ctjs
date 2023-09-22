@@ -1,6 +1,6 @@
 package com.chattriggers.ctjs.commands
 
-import com.chattriggers.ctjs.console.LogType
+import com.chattriggers.ctjs.console.impl.LogType
 import com.chattriggers.ctjs.console.printToConsole
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.minecraft.CTEvents

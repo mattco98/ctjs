@@ -1,5 +1,7 @@
 package com.chattriggers.ctjs.console
 
+import com.chattriggers.ctjs.console.impl.ConsoleManager
+import com.chattriggers.ctjs.console.impl.LogType
 import com.chattriggers.ctjs.utils.Config
 import java.awt.Color
 

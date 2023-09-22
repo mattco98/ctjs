@@ -3,7 +3,6 @@ package com.chattriggers.ctjs.commands
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.CTClientCommandSource
 import com.chattriggers.ctjs.mixins.commands.CommandContextAccessor
-import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.chattriggers.ctjs.utils.asMixin
 import com.mojang.brigadier.CommandDispatcher
 import com.mojang.brigadier.arguments.ArgumentType
@@ -16,29 +15,31 @@ import org.mozilla.javascript.Function
 import org.mozilla.javascript.NativeObject
 import org.mozilla.javascript.ScriptableObject
 
-@InternalApi
 object DynamicCommand {
-    sealed class Node(val parent: Node?) {
-        var method: Function? = null
-        var hasRedirect = false
-        val children = mutableListOf<Node>()
-        var builder: ArgumentBuilder<FabricClientCommandSource, *>? = null
+    sealed class Node(internal val parent: Node?) {
+        internal var method: Function? = null
+        internal var hasRedirect = false
+        internal val children = mutableListOf<Node>()
+        internal var builder: ArgumentBuilder<FabricClientCommandSource, *>? = null
 
-        open class Literal(parent: Node?, val name: String) : Node(parent)
+        open class Literal internal constructor(parent: Node?, internal val name: String) : Node(parent)
 
-        class Root(name: String) : Literal(null, name) {
-            var commandNode: LiteralCommandNode<FabricClientCommandSource>? = null
+        class Root internal constructor(name: String) : Literal(null, name) {
+            internal var commandNode: LiteralCommandNode<FabricClientCommandSource>? = null
 
             fun register() {
                 DynamicCommands.register(CommandImpl(this))
             }
         }
 
-        class Argument(parent: Node?, val name: String, val type: ArgumentType<*>) : Node(parent)
+        internal class Argument(
+            parent: Node?,
+            internal val name: String,
+            internal val type: ArgumentType<*>) : Node(parent)
 
-        class Redirect(parent: Node?, val target: Root) : Node(parent)
+        internal class Redirect(parent: Node?, internal val target: Root) : Node(parent)
 
-        fun initialize(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
+        internal fun initialize(dispatcher: CommandDispatcher<FabricClientCommandSource>) {
             if (this is Redirect) {
                 check(method == null)
                 check(children.isEmpty())
@@ -84,7 +85,7 @@ object DynamicCommand {
         }
     }
 
-    class CommandImpl(private val node: Node.Root) : Command {
+    internal class CommandImpl(private val node: Node.Root) : Command {
         override val overrideExisting = true
         override val name = node.name
 

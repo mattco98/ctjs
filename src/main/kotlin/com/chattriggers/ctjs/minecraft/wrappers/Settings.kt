@@ -37,7 +37,7 @@ object Settings {
     @JvmField
     val video = VideoWrapper()
 
-    class SkinWrapper {
+    class SkinWrapper internal constructor() {
         fun isCapeEnabled() = toMC().isPlayerModelPartEnabled(PlayerModelPart.CAPE)
 
         fun setCapeEnabled(toggled: Boolean) {
@@ -81,7 +81,7 @@ object Settings {
         }
     }
 
-    class SoundWrapper {
+    class SoundWrapper internal constructor() {
         fun getMasterVolume() = toMC().getSoundVolumeOption(SoundCategory.MASTER).value
 
         fun setMasterVolume(level: Double) {
@@ -137,7 +137,7 @@ object Settings {
         }
     }
 
-    class VideoWrapper {
+    class VideoWrapper internal constructor() {
         fun getGraphicsMode() = GraphicsMode.fromMC(toMC().graphicsMode.value)
 
         fun setGraphicsMode(mode: GraphicsMode) {
@@ -217,7 +217,7 @@ object Settings {
         }
     }
 
-    class ChatWrapper {
+    class ChatWrapper internal constructor() {
         fun getVisibility() = ChatVisibility.fromMC(toMC().chatVisibility.value)
 
         fun setVisibility(visibility: ChatVisibility) {

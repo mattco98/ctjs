@@ -2,7 +2,7 @@ package com.chattriggers.ctjs
 
 import com.chattriggers.ctjs.commands.DynamicCommands
 import com.chattriggers.ctjs.commands.StaticCommand
-import com.chattriggers.ctjs.console.ConsoleManager
+import com.chattriggers.ctjs.console.impl.ConsoleManager
 import com.chattriggers.ctjs.engine.Register
 import com.chattriggers.ctjs.engine.module.ModuleManager
 import com.chattriggers.ctjs.minecraft.libs.ChatLib

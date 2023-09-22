@@ -1,5 +1,6 @@
-package com.chattriggers.ctjs.console
+package com.chattriggers.ctjs.console.impl
 
+import com.chattriggers.ctjs.console.Console
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.minecraft.CTEvents
 import com.chattriggers.ctjs.minecraft.objects.KeyBind

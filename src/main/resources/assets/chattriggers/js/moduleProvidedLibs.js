@@ -22,7 +22,7 @@
         class: getJavaClass,
     };
 
-    global.Thread = Java.type("com.chattriggers.ctjs.engine.js.WrappedThread");
+    global.Thread = Java.type("com.chattriggers.ctjs.engine.WrappedThread");
     global.Console = Java.type("com.chattriggers.ctjs.engine.js.JSLoader").INSTANCE.getConsole();
 
     global.sync = (func, lock) => new org.mozilla.javascript.Synchronizer(func, lock);
@@ -151,7 +151,7 @@
     loadClass("org.lwjgl.opengl.GL44");
     loadClass("org.lwjgl.opengl.GL45");
 
-    loadClass("com.chattriggers.ctjs.minecraft.listeners.CancellableEvent");
+    loadClass("com.chattriggers.ctjs.trigger.CancellableEvent");
     global.cancel = event => {
         if (event instanceof CancellableEvent) {
             event.setCanceled(true);

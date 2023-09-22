@@ -1,10 +1,8 @@
 package com.chattriggers.ctjs.typing
 
 internal val globals = mapOf(
-    // TODO: WrappedThread is in an internal package
-    "Thread" to "java.lang.Thread",
-    // TODO: Console is in an internal package
-    "Console" to null,
+    "Thread" to "com.chattriggers.ctjs.engine.WrappedThread",
+    "Console" to "com.chattriggers.ctjs.console.Console",
     "ArrayList" to "java.util.ArrayList",
     "HashMap" to "java.util.HashMap",
     "Keyboard" to "gg.essential.universal.UKeyboard",
@@ -89,8 +87,7 @@ internal val globals = mapOf(
     "GL43" to null,
     "GL44" to null,
     "GL45" to null,
-    // TODO: CancellableEvent is in an internal package
-    "CancellableEvent" to null,
+    "CancellableEvent" to "com.chattriggers.ctjs.trigger.CancellableEvent",
 )
 
 private val staticPrologue = """

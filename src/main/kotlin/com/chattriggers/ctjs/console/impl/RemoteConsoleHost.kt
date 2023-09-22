@@ -1,6 +1,7 @@
-package com.chattriggers.ctjs.console
+package com.chattriggers.ctjs.console.impl
 
 import com.chattriggers.ctjs.Reference
+import com.chattriggers.ctjs.console.Console
 import com.chattriggers.ctjs.engine.js.JSLoader
 import com.chattriggers.ctjs.minecraft.wrappers.Client
 import com.chattriggers.ctjs.utils.Config
@@ -10,7 +11,6 @@ import kotlinx.serialization.json.Json
 import java.awt.Color
 import java.io.BufferedReader
 import java.io.File
-import java.io.IOException
 import java.io.InputStreamReader
 import java.io.PrintWriter
 import java.net.ServerSocket
