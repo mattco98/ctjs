@@ -20,18 +20,6 @@ class WrappedThread(private val task: Runnable) {
         }
     }
 
-    // Provide the following methods as no-ops to avoid breaking
-    // changes, as this class use to extend Thread
-    fun run() {}
-    fun stop() {}
-    fun interrupt() {}
-    fun isInterrupted() = false
-    fun destroy() {}
-    fun isAlive() = true
-    fun suspend() {}
-    fun resume() {}
-    fun getId() = 0L
-
     companion object {
         @JvmStatic
         @JvmOverloads
