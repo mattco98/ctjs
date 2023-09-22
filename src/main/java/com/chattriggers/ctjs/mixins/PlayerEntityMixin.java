@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.mixins;
 
 import com.chattriggers.ctjs.NameTagOverridable;
-import com.chattriggers.ctjs.minecraft.objects.TextComponent;
+import com.chattriggers.ctjs.api.message.TextComponent;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.text.MutableText;
 import org.jetbrains.annotations.Nullable;

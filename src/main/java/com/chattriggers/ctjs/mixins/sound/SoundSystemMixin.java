@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.mixins.sound;
 
-import com.chattriggers.ctjs.triggers.TriggerType;
-import com.chattriggers.ctjs.utils.vec.Vec3f;
+import com.chattriggers.ctjs.api.triggers.TriggerType;
+import com.chattriggers.ctjs.api.vec.Vec3f;
 import net.minecraft.client.sound.SoundInstance;
 import net.minecraft.client.sound.SoundSystem;
 import org.spongepowered.asm.mixin.Mixin;

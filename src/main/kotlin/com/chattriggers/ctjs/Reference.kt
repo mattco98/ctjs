@@ -1,17 +1,17 @@
 package com.chattriggers.ctjs
 
-import com.chattriggers.ctjs.commands.DynamicCommands
-import com.chattriggers.ctjs.commands.StaticCommand
-import com.chattriggers.ctjs.console.impl.ConsoleManager
+import com.chattriggers.ctjs.api.client.Client
+import com.chattriggers.ctjs.api.commands.DynamicCommands
+import com.chattriggers.ctjs.internal.commands.StaticCommand
+import com.chattriggers.ctjs.internal.console.ConsoleManager
 import com.chattriggers.ctjs.engine.Register
-import com.chattriggers.ctjs.engine.module.ModuleManager
-import com.chattriggers.ctjs.minecraft.libs.ChatLib
-import com.chattriggers.ctjs.minecraft.libs.renderer.Image
-import com.chattriggers.ctjs.minecraft.objects.KeyBind
-import com.chattriggers.ctjs.minecraft.objects.Sound
-import com.chattriggers.ctjs.minecraft.wrappers.Client
-import com.chattriggers.ctjs.minecraft.wrappers.World
-import com.chattriggers.ctjs.triggers.TriggerType
+import com.chattriggers.ctjs.internal.engine.module.ModuleManager
+import com.chattriggers.ctjs.api.message.ChatLib
+import com.chattriggers.ctjs.api.render.Image
+import com.chattriggers.ctjs.api.client.KeyBind
+import com.chattriggers.ctjs.api.client.Sound
+import com.chattriggers.ctjs.api.triggers.TriggerType
+import com.chattriggers.ctjs.api.world.World
 import kotlin.concurrent.thread
 
 object Reference {

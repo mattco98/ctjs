@@ -2,7 +2,7 @@ package com.chattriggers.ctjs.mixins;
 
 import com.chattriggers.ctjs.minecraft.listeners.CancellableEvent;
 import com.chattriggers.ctjs.minecraft.wrappers.inventory.Item;
-import com.chattriggers.ctjs.triggers.TriggerType;
+import com.chattriggers.ctjs.api.triggers.TriggerType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.inventory.CraftingInventory;
 import net.minecraft.inventory.RecipeInputInventory;

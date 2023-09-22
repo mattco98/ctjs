@@ -1,6 +1,6 @@
 package com.chattriggers.ctjs.mixins;
 
-import com.chattriggers.ctjs.triggers.TriggerType;
+import com.chattriggers.ctjs.api.triggers.TriggerType;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleManager;
 import org.spongepowered.asm.mixin.Mixin;

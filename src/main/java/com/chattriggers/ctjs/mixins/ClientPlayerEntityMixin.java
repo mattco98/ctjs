@@ -2,7 +2,7 @@ package com.chattriggers.ctjs.mixins;
 
 import com.chattriggers.ctjs.minecraft.wrappers.Player;
 import com.chattriggers.ctjs.minecraft.wrappers.inventory.Item;
-import com.chattriggers.ctjs.triggers.TriggerType;
+import com.chattriggers.ctjs.api.triggers.TriggerType;
 import net.minecraft.client.network.ClientPlayerEntity;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

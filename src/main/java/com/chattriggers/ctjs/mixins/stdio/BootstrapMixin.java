@@ -1,6 +1,6 @@
 package com.chattriggers.ctjs.mixins.stdio;
 
-import com.chattriggers.ctjs.launch.CTMixinPlugin;
+import com.chattriggers.ctjs.internal.launch.CTMixinPlugin;
 import net.minecraft.Bootstrap;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;

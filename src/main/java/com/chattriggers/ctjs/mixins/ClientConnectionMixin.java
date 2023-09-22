@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.mixins;
 
 import com.chattriggers.ctjs.minecraft.CTEvents;
-import com.chattriggers.ctjs.triggers.TriggerType;
+import com.chattriggers.ctjs.api.triggers.TriggerType;
 import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.ClientConnection;
 import net.minecraft.network.NetworkSide;

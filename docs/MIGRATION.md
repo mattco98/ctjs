@@ -86,6 +86,7 @@ Here is a list of targeted changes for various different APIs:
     - It previously took a `PlayerMP` (which was always the player since this is a client mod) and the item's position/motion, both of which can be obtained by methods on `Item`
   - `renderEntity` no longer takes the entity's position as an argument. Instead, call `Entity.getPos()`
   - `spawnParticle` no longer passes in the particle type (which no longer exists in the MC codebase). Instead, the class can be access from the particle wrapper's underlying MC type
+  - Removed all trigger classes from the global namespace
 - The `/ct` command
   - Removed `/ct copy`. Replace this with `Client.copy(text: String)`
   - Removed the following aliases: 

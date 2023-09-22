@@ -1,7 +1,7 @@
 package com.chattriggers.ctjs.mixins;
 
 import com.chattriggers.ctjs.minecraft.CTEvents;
-import com.chattriggers.ctjs.minecraft.listeners.MouseListener;
+import com.chattriggers.ctjs.internal.listeners.MouseListener;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.Mouse;
 import net.minecraft.client.gui.screen.Screen;

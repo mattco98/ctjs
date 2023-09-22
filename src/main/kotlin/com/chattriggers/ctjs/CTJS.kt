@@ -1,14 +1,14 @@
 package com.chattriggers.ctjs
 
-import com.chattriggers.ctjs.console.impl.ConsoleManager
-import com.chattriggers.ctjs.engine.module.ModuleManager
-import com.chattriggers.ctjs.minecraft.libs.renderer.Image
-import com.chattriggers.ctjs.minecraft.objects.Sound
-import com.chattriggers.ctjs.minecraft.wrappers.Client
-import com.chattriggers.ctjs.minecraft.wrappers.Player
-import com.chattriggers.ctjs.triggers.TriggerType
-import com.chattriggers.ctjs.utils.Config
-import com.chattriggers.ctjs.utils.Initializer
+import com.chattriggers.ctjs.api.client.Client
+import com.chattriggers.ctjs.api.client.Player
+import com.chattriggers.ctjs.internal.console.ConsoleManager
+import com.chattriggers.ctjs.internal.engine.module.ModuleManager
+import com.chattriggers.ctjs.api.render.Image
+import com.chattriggers.ctjs.api.client.Sound
+import com.chattriggers.ctjs.api.triggers.TriggerType
+import com.chattriggers.ctjs.api.Config
+import com.chattriggers.ctjs.internal.utils.Initializer
 import com.google.gson.Gson
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.loader.api.FabricLoader

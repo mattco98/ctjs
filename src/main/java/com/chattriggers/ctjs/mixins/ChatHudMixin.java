@@ -1,7 +1,6 @@
 package com.chattriggers.ctjs.mixins;
 
-import com.chattriggers.ctjs.minecraft.libs.ChatLib;
-import com.google.common.collect.Lists;
+import com.chattriggers.ctjs.api.message.ChatLib;
 import net.minecraft.client.gui.hud.ChatHud;
 import net.minecraft.client.gui.hud.ChatHudLine;
 import net.minecraft.client.gui.hud.MessageIndicator;
