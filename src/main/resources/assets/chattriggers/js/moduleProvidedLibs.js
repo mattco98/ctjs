@@ -114,7 +114,7 @@
     // Misc
 
     loadClass("com.chattriggers.ctjs.engine.Register", "TriggerRegister");
-    global.priority = Java.class("com.chattriggers.ctjs.api.triggers.Trigger").Priority;
+    global.Priority = Java.class("com.chattriggers.ctjs.api.triggers.Trigger").Priority;
     loadClass("com.chattriggers.ctjs.Reference", "ChatTriggers");
 
     // GL

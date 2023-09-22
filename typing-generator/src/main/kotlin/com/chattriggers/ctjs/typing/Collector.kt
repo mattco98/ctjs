@@ -1,6 +1,5 @@
 package com.chattriggers.ctjs.typing
 
-import com.chattriggers.ctjs.typing.annotations.InternalApi
 import com.google.devtools.ksp.*
 import com.google.devtools.ksp.processing.KSPLogger
 import com.google.devtools.ksp.processing.Resolver
@@ -10,15 +9,14 @@ import java.util.*
 @OptIn(KspExperimental::class)
 class Collector(
     private val resolver: Resolver,
-    internalPackages: List<String>,
     @Suppress("unused") private val logger: KSPLogger,
 ) {
     private val loadedClasses = mutableSetOf<String>()
     private val packages = mutableMapOf<String, Node.Namespace>()
     private val topLevelPackages = mutableListOf<Node.Namespace>()
 
-    // We add some extra packages here that we don't want to appear in the definition file
-    private val internalPackages = internalPackages + listOf(
+    private val internalPackages = listOf(
+        "com.chattriggers.ctjs.internal",
         "java.awt",
         "org.mozilla.javascript"
     )
@@ -49,11 +47,7 @@ class Collector(
             return false
 
         val packageName = decl.packageName.asString()
-        if (
-            !decl.isPublic() ||
-            decl.isAnnotationPresent(InternalApi::class) ||
-            internalPackages.any(packageName::startsWith)
-        )
+        if (!decl.isPublic() || internalPackages.any(packageName::startsWith))
             return false
 
         val qualifiedName = decl.qualifiedName!!.asString()

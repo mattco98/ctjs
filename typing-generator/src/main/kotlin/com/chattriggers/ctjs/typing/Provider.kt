@@ -10,7 +10,7 @@ class Provider : SymbolProcessorProvider {
     }
 }
 
-class Processor(private val environment: SymbolProcessorEnvironment) : SymbolProcessor {
+class Processor(environment: SymbolProcessorEnvironment) : SymbolProcessor {
     private val codeGenerator = environment.codeGenerator
     private val logger = environment.logger
     private val dependentFiles = mutableSetOf<KSFile>()
@@ -18,8 +18,7 @@ class Processor(private val environment: SymbolProcessorEnvironment) : SymbolPro
     private var indent = 0
 
     override fun process(resolver: Resolver): List<KSAnnotated> {
-        val internalPackages = environment.options["internalPackages"]!!.split(';')
-        val topLevelNamespaces = Collector(resolver, internalPackages, logger).collect().map(::createSpan)
+        val topLevelNamespaces = Collector(resolver, logger).collect().map(::createSpan)
         var first = true
         for (ns in topLevelNamespaces) {
             if (!first)

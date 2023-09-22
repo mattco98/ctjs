@@ -1,4 +1,3 @@
-import com.chattriggers.ctjs.gradle.internalPackages
 import org.gradle.kotlin.dsl.support.unzipTo
 import org.jetbrains.dokka.versioning.VersioningConfiguration
 import org.jetbrains.dokka.versioning.VersioningPlugin
@@ -81,10 +80,6 @@ dependencies {
     }
 }
 
-ksp {
-    arg("internalPackages", internalPackages.joinToString(";"))
-}
-
 loom {
     accessWidenerPath.set(rootProject.file("src/main/resources/chattriggers.accesswidener"))
 }
@@ -160,11 +155,9 @@ tasks.dokkaHtml {
         configureEach {
             jdkVersion.set(17)
 
-            for (pkg in setOf("engine.langs", "engine.loader", "engine.module", "utils", "listeners", "loader", "launch", "commands", "minecraft.wrappers.objects.threading")) {
-                perPackageOption {
-                    matchingRegex.set("${"com.chattriggers.ctjs.$pkg".replace(".", "\\.")}(\$|\\.).*")
-                    suppress.set(true)
-                }
+            perPackageOption {
+                matchingRegex.set("com\\.chattriggers\\.ctjs\\.internal")
+                suppress.set(true)
             }
 
             sourceLink {
