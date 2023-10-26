@@ -18,7 +18,6 @@ internal abstract class InjectorGenerator(protected val ctx: GenerationContext, 
     abstract fun getInjectionSignature(): InjectionSignature
 
     abstract fun attachAnnotation(node: MethodNode, signature: InjectionSignature)
-
     context(ClassAssembly)
     fun generate() {
         val signature = getInjectionSignature()

@@ -152,6 +152,9 @@
     global.register = (type, method) => TriggerRegister.register(type, method);
     global.createCustomTrigger = name => TriggerRegister.createCustomTrigger(name);
 
+    global.extend = (superClass, interfaces, impl) =>
+        com.chattriggers.ctjs.internal.engine.ClassExtender.extend(superClass, interfaces, impl);
+
     // String prototypes
     String.prototype.addFormatting = function () {
         return ChatLib.addColor(this);

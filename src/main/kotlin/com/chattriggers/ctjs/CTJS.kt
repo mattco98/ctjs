@@ -15,6 +15,7 @@ import com.chattriggers.ctjs.internal.commands.StaticCommand
 import com.chattriggers.ctjs.engine.Console
 import com.chattriggers.ctjs.internal.console.ConsoleHostProcess
 import com.chattriggers.ctjs.internal.engine.CTEvents
+import com.chattriggers.ctjs.internal.engine.ClassExtender
 import com.chattriggers.ctjs.internal.engine.module.ModuleManager
 import com.chattriggers.ctjs.internal.utils.Initializer
 import com.google.gson.Gson
