@@ -3,6 +3,7 @@ package com.chattriggers.ctjs.internal.launch
 import com.chattriggers.ctjs.api.Mappings
 import com.chattriggers.ctjs.internal.launch.generation.Utils
 import org.objectweb.asm.Type
+import java.lang.invoke.MethodType
 
 sealed interface Descriptor {
     val isType get() = true
@@ -138,6 +139,14 @@ sealed interface Descriptor {
             Mappings.getMappedClass(owner!!.originalDescriptor())
                 ?.let { Utils.findMethod(it, this) }?.first?.name?.value
                 ?: name
+        }
+
+        val mappedMethodType by lazy {
+            MethodType.fromMethodDescriptorString(mappedDescriptor(), null)
+        }
+
+        val originalMethodType by lazy {
+            MethodType.fromMethodDescriptorString(originalDescriptor(), null)
         }
 
         init {

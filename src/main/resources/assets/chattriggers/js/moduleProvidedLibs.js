@@ -152,8 +152,7 @@
     global.register = (type, method) => TriggerRegister.register(type, method);
     global.createCustomTrigger = name => TriggerRegister.createCustomTrigger(name);
 
-    global.extend = (superClass, interfaces, impl) =>
-        com.chattriggers.ctjs.internal.engine.ClassExtender.extend(superClass, interfaces, impl);
+    global.extend = obj => com.chattriggers.ctjs.internal.engine.ClassExtender.extend(obj);
 
     // String prototypes
     String.prototype.addFormatting = function () {

@@ -4,26 +4,24 @@ import codes.som.koffee.assembleClass
 import codes.som.koffee.insns.InstructionAssembly
 import codes.som.koffee.insns.jvm.*
 import codes.som.koffee.insns.sugar.*
-import codes.som.koffee.labels.LabelLike
+import codes.som.koffee.modifiers.Modifiers
+import codes.som.koffee.modifiers.abstract
 import codes.som.koffee.modifiers.public
 import codes.som.koffee.types.*
 import com.chattriggers.ctjs.CTJS
-import org.mozilla.javascript.Callable
-import org.mozilla.javascript.Context
-import org.mozilla.javascript.EcmaError
-import org.mozilla.javascript.IdFunctionCall
-import org.mozilla.javascript.IdFunctionObject
-import org.mozilla.javascript.IdScriptableObject
-import org.mozilla.javascript.NativeObject
-import org.mozilla.javascript.ScriptRuntime
-import org.mozilla.javascript.Scriptable
-import org.mozilla.javascript.Wrapper
+import com.chattriggers.ctjs.internal.launch.Descriptor
+import org.mozilla.javascript.*
+import org.mozilla.javascript.Function
 import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.ConstantDynamic
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.tree.ClassNode
 import org.objectweb.asm.tree.TryCatchBlockNode
 import java.io.File
+import java.lang.invoke.MethodHandle
 import java.lang.invoke.MethodHandles
+import java.lang.invoke.MethodType
+import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import java.net.URLClassLoader
 
@@ -31,178 +29,194 @@ interface MockInterface {
     fun sum(a: Int, b: Int): Int
 }
 
-/*
-extend(null, [MockInterface], {
-    sum(a, b) {
-        return a + b;
-    }
-});
- */
+abstract class MockClass {
+    abstract fun doThing()
+}
 
 /*
-public class Object_backingObj_0 implements MockInterface {
-    Object_wrapperObj_1 jsWrapper;
 
-    int sum(int a, int b) {
-        Scriptable scope = Context.getScope();
-        Object result = jsWrapper.js_sum(Context.getContext(), scope, new Object[]{
-            Context.javaToJS(a, scope), Context.javaToJS(b, scope)
-        });
-        return (int) Context.jsToJava(int.class, result);
+class BackingObject {
+    int foo(int a) {
+        return (int) Context.jsToJava(this.jsImpl.foo$1(..., new Object[]{a}), int.class)
+    }
+
+    float foo(float a) {
+        return (float) Context.jsToJava(this.jsImpl.foo$2(..., new Object[]{a}), float.class)
     }
 }
 
-public class Object_wrapperObj_1 extends IdScriptableObject implements Wrapper {
-    private static final Object TAG = "Object_wrapperObj_1";
-    private static Scriptable impl = null;
-
-    private final Object_backingObj_0 backingObject = null;
-    private boolean isConstructor;
-
-    // Not actually generated
-    private static final Id_constructor = 1;
-    private static final Id_sum = 2;
-
-    Object_wrapperObj_1(Scriptable impl, boolean __ctorMarker) {
-        if (impl != null) {
-            throw new IllegalStateException("Duplicate construction of Scriptable class object");
-        }
-
-        Object_wrapperObj_1.impl = impl;
-        this.isConstructor = true;
+class WrapperObject {
+    Object js_foo(Context, cx, ..., Object[] args) {
+        // TODO: Determine appropriate method from args
     }
 
-    Object_wrapperObj_1(Object_backingObj_0 backingObject) {
-        if (impl == null) {
-            throw new IllegalStateException("Construction of Scriptable class instance before constructor");
-        }
-
-        this.backingObject = backingObject;
-        backingObject.jsWrapper = this;
-        this.isConstructor = false;
+    Object foo$1(Context cx, ..., Object[] args) {
+        // ...
     }
-
-    @Override
-    public Object_backingObj_0 unwrap() {
-        return backingObject;
+    Object foo$2(Context cx, ..., Object[] args) {
+        // ...
     }
+    Object foo$fallback(Context, cx, ..., Object[] args) {
 
-    @Override
-    public Object execIdCall(IdFunctionObject f, Context cx, Scriptable scope, Scriptable thisObj, Object[] args) {
-        if (!f.hasTag(TAG))
-            return super.execIdCall(f, cx, scope, thisObj, args);
-
-        switch (f.methodId()) {
-            case Id_constructor:
-                return js_construct(cx, scope, thisObj, args);
-            case Id_sum:
-                return realThis(thisObj, f).js_sum(cx, scope, args);
-        }
-
-        throw new IllegalArgumentException("Object_wrapperObj_1 has no method: " + f.getFunctionName());
-    }
-
-    public Object js_sum(Context cx, Scriptable scope, Object[] args) {
-        Callable func = (Callable) impl.get("sum");
-        return func.call(cx, scope, this, args);
-    }
-
-    @Override
-    protected void initPrototypeId(int id) {
-        String s, fnName = null;
-        int arity;
-
-        switch (id) {
-            case Id_constructor:
-                arity = 0;
-                s = "constructor";
-                break;
-            case Id_sum:
-                arity = 2;
-                s = "sum";
-                break;
-            default:
-                throw new IllegalArgumentException(String.valueOf(id));
-        }
-
-        initPrototypeMethod(TAG, id, s, null, arity);
-    }
-
-    @Override int findPrototypeId(String s) {
-        switch (s) {
-            case "constructor": return Id_constructor;
-            case "sum": return Id_sum;
-        }
-        return 0;
-    }
-
-    private static Object_wrapperObj_1 realThis(Scriptable thisObj, IdFunctionObject f) {
-        if (thisObj == null) {
-            throw incompatibleCallError(f);
-        }
-
-        try {
-            Object_wrapperObj_1 nm = (Object_wrapperObj_1) ScriptRuntime.unwrapProxy(thisObj)
-            return nm;
-        } catch (ClassCastException cce) {
-            throw incompatibleCallError(f);
-        }
     }
 }
+
  */
-
-class Foo {
-    constructor(a: String, b: Int) {
-
-    }
-}
 
 class ClassExtender private constructor(
+    private val className: String,
     private val superClass: Class<*>,
     private val interfaces: List<Class<*>>,
-    private val impl: NativeObject,
+    private val instanceImpl: NativeObject?,
+    private val staticImpl: NativeObject?,
 ) {
     // Use separate class loaders for each instance so that they can be eagerly garbage collected
     private var cl = OpenClassLoader()
 
-    private val backingName = "${superClass.simpleName}_backingObj_${counter++}"
-    private val backingType = "com/chattriggers/ctjs/internal/engine/${backingName}"
+    private val backingName = "${superClass.simpleName}_backingObj_$counter"
+    private val backingType = "$GENERATED_PACKAGE/${backingName}"
 
-    private val wrapperName = "${superClass.simpleName}_wrapperObj_${counter++}"
-    private val wrapperType = "com/chattriggers/ctjs/internal/engine/$wrapperName"
+    private val wrapperName = "${superClass.simpleName}_wrapperObj_$counter"
+    private val wrapperType = "$GENERATED_PACKAGE/$wrapperName"
 
-    private val properties = mutableMapOf<String, Any?>()
-    private val methods = mutableMapOf<String, Callable>()
-    private val ids = mutableMapOf<String, Int>()
-    private val minId: Int
-    private val maxId: Int
+    // Instance IDs start at 2 since "constructor" is always 1
+    private val instanceMembers = getMembers(instanceImpl, idStart = 2, idStep = 1)
+    private val staticMembers = getMembers(staticImpl, idStart = -1, idStep = -1)
+    private val minId = staticMembers.idProvider.nextId + 1
+    private val maxId = instanceMembers.idProvider.nextId - 1
+    private val isAbstract: Boolean
 
     init {
-        var nextId = 1
-        for (id in impl.ids) {
-            if (id !is String)
-                continue
+        val overridableMethods = collectOverridableMethods(superClass) +
+            interfaces.flatMapTo(mutableSetOf(), ::collectOverridableMethods)
 
-            val value = impl[id]
-            if (value is Callable) {
-                methods[id] = value
-            } else {
-                properties[id] = value
-            }
+        val remainingMethods = overridableMethods.toMutableSet()
 
-            ids[id] = nextId++
+        for (method in overridableMethods) {
+            if (instanceMembers.methods.associate(method))
+                remainingMethods.remove(method)
         }
 
-        minId = -1 // TODO: Static methods
-        maxId = nextId - 1
+        isAbstract = remainingMethods.any {
+            Modifier.isAbstract(it.modifiers)
+        }
+
+        counter++
+    }
+
+    // TODO: Symbol/number properties
+    // TODO: Getters/setters
+    private fun getMembers(obj: NativeObject?, idStart: Int, idStep: Int): ImplementationMembers {
+        val members = ImplementationMembers(IdProvider(idStart, idStep))
+
+        if (obj != null) {
+            for (name in obj.ids) {
+                if (name is String)
+                    members.add(name, obj[name])
+            }
+        }
+
+        return members
+    }
+
+    data class IdProvider(var nextId: Int, var step: Int)
+
+    data class ImplementationMembers(
+        val idProvider: IdProvider,
+        val properties: MutableMap<String, Any?> = mutableMapOf(),
+        val methods: ImplementationMethods = ImplementationMethods(),
+        val ids: MutableMap<String, Int> = mutableMapOf(),
+    ) {
+        fun add(name: String, value: Any?) {
+            require(name !in properties) {
+                "Duplicate property \"$name\" in implementation object"
+            }
+
+            if (value is Function) {
+                methods.add(name, value)
+            } else {
+                properties[name] = value
+            }
+
+            // Only functions get IDs
+            if (value is Function) {
+                ids[name] = idProvider.nextId
+                idProvider.nextId += idProvider.step
+            }
+        }
+    }
+
+    class ImplementationMethods {
+        private val methods = mutableMapOf<String, MutableList<ImplMethod>>()
+
+        fun add(signature: String, function: Function) {
+            val (name, type) = parseMethodSignature(signature)
+            val list = methods.getOrPut(name, ::mutableListOf)
+            require(list.none { it.type == type }) {
+                "Multiple implementation methods with same signature \"$type\""
+            }
+            list.add(ImplMethod(function, type, null))
+        }
+
+        fun associate(method: Method): Boolean {
+            val methodList = methods[method.name] ?: return false
+            val handle = MethodHandles.lookup().unreflect(method)
+            val type = handle.type()
+
+            methodList.forEach {
+                if (it.type == type) {
+                    it.javaHandle = handle
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        // TODO: Parse these in the same way Rhino does
+        private fun parseMethodSignature(signature: String): Pair<String, MethodType> {
+            val paren = signature.indexOf('(')
+            if (paren == -1)
+                return signature to MethodType.methodType(Any::class.java, Array<Any>::class.java)
+
+            val name = signature.substring(0, paren)
+            val descriptor = Descriptor.Parser(signature.substring(paren)).parseMethod(full = true)
+            return name to descriptor.originalMethodType
+        }
+
+        operator fun iterator() = methods.entries.iterator()
+
+        data class ImplMethod(
+            val function: Function,
+            val type: MethodType,
+            var javaHandle: MethodHandle?,
+        )
+    }
+
+    private fun collectOverridableMethods(clazz: Class<*>): Set<Method> {
+        val methods = mutableSetOf<Method>()
+
+        for (method in clazz.declaredMethods) {
+            if (method.modifiers.let { Modifier.isFinal(it) || Modifier.isPrivate(it) || Modifier.isStatic(it) })
+                continue
+
+            methods.add(method)
+        }
+
+        clazz.superclass?.let { methods += collectOverridableMethods(it) }
+        clazz.interfaces.forEach { methods += collectOverridableMethods(it) }
+
+        return methods
     }
 
     fun generate(): Any {
         generateBackingClass()
 
-        return generateWrapperClass()
-            .getConstructor(NativeObject::class.java, Boolean::class.java)
-            .newInstance(impl, true)
+        val instance: IdScriptableObject = generateWrapperClass()
+            .getConstructor(NativeObject::class.java, NativeObject::class.java, Boolean::class.java)
+            .newInstance(staticImpl, instanceImpl, true) as IdScriptableObject
+
+        return instance.exportAsJSClass(maxId, null, false, true)
     }
 
     private fun generateWrapperClass(): Class<*> {
@@ -214,13 +228,14 @@ class ClassExtender private constructor(
             interfaces = listOf(Wrapper::class),
         ) {
             field(private + static + final, "TAG", String::class, wrapperType)
-            field(private + static, "impl", NativeObject::class)
+            field(private + static, "staticImpl", NativeObject::class)
+            field(private + static, "instanceImpl", NativeObject::class)
 
             field(private + final, "backingObject", Any::class)
             field(private, "isConstructor", boolean)
 
-            method(public, "<init>", void, NativeObject::class, boolean) {
-                getstatic(wrapperType, "impl", NativeObject::class)
+            method(public, "<init>", void, NativeObject::class, NativeObject::class, boolean) {
+                getstatic(wrapperType, "instanceImpl", NativeObject::class)
                 ifStatement(JumpCondition.NonNull) {
                     construct<IllegalStateException>(String::class) {
                         ldc("Duplicate construction of Scriptable class object $wrapperName")
@@ -232,7 +247,10 @@ class ClassExtender private constructor(
                 invokespecial<IdScriptableObject>("<init>", void)
 
                 aload_1
-                putstatic(wrapperType, "impl", NativeObject::class)
+                putstatic(wrapperType, "staticImpl", NativeObject::class)
+
+                aload_2
+                putstatic(wrapperType, "instanceImpl", NativeObject::class)
 
                 aload_0
                 ldc(true)
@@ -242,7 +260,7 @@ class ClassExtender private constructor(
             }
 
             method(public, "<init>", void, backingType) {
-                getstatic(wrapperType, "impl", NativeObject::class)
+                getstatic(wrapperType, "instanceImpl", NativeObject::class)
                 ifStatement(JumpCondition.Null) {
                     construct<IllegalStateException>(String::class) {
                         ldc("Construction of Scriptable class instance $wrapperName before constructor")
@@ -274,6 +292,66 @@ class ClassExtender private constructor(
                 areturn
             }
 
+            method(protected, "fillConstructorProperties", void, IdFunctionObject::class) {
+                val propertyAttr = ScriptableObject.NOT_ENUMERABLE or
+                    ScriptableObject.NOT_CONFIGURABLE or
+                    ScriptableObject.NOT_WRITABLE
+
+                for ((name, value) in staticMembers.properties) {
+                    aload_1
+                    ldc(name)
+
+                    when {
+                        value == null -> aconst_null
+                        value::class.java.isPrimitive ||
+                            value is String ||
+                            value is Class<*> ||
+                            value is MethodHandle ||
+                            value is ConstantDynamic -> ldc(value)
+                        else -> {
+                            aload_0
+                            getfield(wrapperType, "staticImpl", NativeObject::class)
+                            ldc(name)
+                            invokevirtual<Map<*, *>>("get", Any::class, String::class)
+                        }
+                    }
+
+                    ldc(propertyAttr)
+
+                    invokevirtual<IdFunctionObject>("defineProperty", void, String::class, Any::class, int)
+                }
+
+                for ((name, methods) in staticMembers.methods) {
+                    val largestArity = methods.maxOf {
+                        ScriptRuntime.toNumber(it.function.get("length", it.function)).toInt()
+                    }
+                    aload_0
+                    aload_1
+
+                    getstatic(wrapperType, "TAG", String::class)
+
+                    ldc(staticMembers.ids[name]!!)
+                    ldc(name)
+                    ldc(largestArity)
+
+                    invokevirtual(
+                        wrapperType,
+                        "addIdFunctionProperty",
+                        void,
+                        Scriptable::class,
+                        Any::class,
+                        int,
+                        String::class,
+                        int
+                    )
+                }
+
+                aload_0
+                aload_1
+                invokevirtual<IdScriptableObject>("addCtorSpecies", void, IdFunctionObject::class)
+                _return
+            }
+
             method(
                 public,
                 "execIdCall",
@@ -286,7 +364,7 @@ class ClassExtender private constructor(
             ) {
                 aload_1
                 getstatic(wrapperType, "TAG", String::class)
-                invokevirtual<IdFunctionObject>("hasTag", boolean, String::class)
+                invokevirtual<IdFunctionObject>("hasTag", boolean, Any::class)
                 ifStatement(JumpCondition.False) {
                     aload_0
                     aload_1
@@ -294,7 +372,7 @@ class ClassExtender private constructor(
                     aload_3
                     aload(4)
                     aload(5)
-                    invokevirtual<IdFunctionObject>(
+                    invokespecial<IdScriptableObject>(
                         "execIdCall",
                         Any::class,
                         IdFunctionObject::class,
@@ -306,14 +384,34 @@ class ClassExtender private constructor(
                     areturn
                 }
 
+                // Extra case for id zero, the default case, which throws
                 val methodLabels = Array(maxId - minId + 1) { makeLabel() }
 
                 aload_1
                 invokevirtual<IdFunctionObject>("methodId", int)
                 tableswitch(minId, maxId, methodLabels[-minId], *methodLabels)
 
-                for (name in methods.keys) {
-                    placeLabel(methodLabels[ids[name]!! - minId])
+                for (name in staticMembers.methods.keys) {
+                    placeLabel(methodLabels[staticMembers.ids[name]!! - minId])
+
+                    aload_2
+                    aload_3
+                    aload(4)
+                    aload(5)
+                    invokestatic(
+                        wrapperType,
+                        "js_$name",
+                        Any::class,
+                        Context::class,
+                        Scriptable::class,
+                        Scriptable::class,
+                        Array<Any>::class
+                    )
+                    areturn
+                }
+
+                for (name in instanceMembers.methods.keys) {
+                    placeLabel(methodLabels[instanceMembers.ids[name]!! - minId])
 
                     aload(4)
                     aload_1
@@ -322,15 +420,40 @@ class ClassExtender private constructor(
                     aload_2
                     aload_3
                     aload(5)
-                    invokevirtual(wrapperType, "js_$name", Any::class, Context::class, Scriptable::class, Array<Any>::class)
+                    invokevirtual(
+                        wrapperType,
+                        "js_$name",
+                        Any::class,
+                        Context::class,
+                        Scriptable::class,
+                        Array<Any>::class
+                    )
                     areturn
                 }
 
-                placeLabel(methodLabels[0]) // TODO: Constructor/static methods
+                // Constructor case (always ID 1)
+                placeLabel(methodLabels[-minId + 1])
+                aload_0
+                aload_2
+                aload_3
+                aload(4)
+                aload(5)
+                invokevirtual(
+                    wrapperType,
+                    "js_construct",
+                    wrapperType,
+                    Context::class,
+                    Scriptable::class,
+                    Scriptable::class,
+                    Array<Any>::class
+                )
+                areturn
+
+                // Default case
                 placeLabel(methodLabels[-minId])
                 construct<IllegalArgumentException>(String::class) {
                     construct<StringBuilder>()
-                    ldc("$wrapperName has no method: ")
+                    ldc("$wrapperName.prototype has no method: ")
                     invokevirtual<StringBuilder>("append", StringBuilder::class, String::class)
                     aload_1
                     invokevirtual<IdFunctionObject>("getFunctionName", String::class)
@@ -371,28 +494,38 @@ class ClassExtender private constructor(
             method(protected, "initPrototypeId", void, int) {
                 val end = makeLabel()
 
-                val methodLabels = Array(maxId - minId + 1) { makeLabel() }
+                val methodLabels = Array(maxId + 1) { makeLabel() }
 
                 aload_0
                 getstatic(wrapperType, "TAG", String::class)
                 iload_1
 
                 iload_1
-                tableswitch(minId, maxId, methodLabels[-minId], *methodLabels)
+                tableswitch(0, maxId, methodLabels[0], *methodLabels)
 
-                for (name in methods.keys) {
-                    val id = ids[name]!!
-                    placeLabel(methodLabels[id - minId])
+                for ((name, method) in instanceMembers.methods) {
+                    placeLabel(methodLabels[instanceMembers.ids[name]!!])
 
-                    // TODO: Arity
                     ldc(name)
                     aconst_null
-                    push_int(0)
+                    push_int(ScriptRuntime.toNumber(method.get("length", method)).toInt())
                     goto(end)
                 }
 
-                placeLabel(methodLabels[0]) // TODO: Constructor/static methods
-                placeLabel(methodLabels[-minId])
+                // Constructor case (always ID 1)
+                val constructor = instanceMembers.methods["constructor"]
+                placeLabel(methodLabels[1])
+                ldc("constructor")
+                aconst_null
+                if (constructor != null) {
+                    push_int(ScriptRuntime.toNumber(constructor.get("length", constructor)).toInt())
+                } else {
+                    push_int(0)
+                }
+                goto(end)
+
+                // Default case
+                placeLabel(methodLabels[0])
                 construct<IllegalArgumentException>(String::class) {
                     iload_1
                     invokestatic<String>("valueOf", String::class, int)
@@ -400,18 +533,124 @@ class ClassExtender private constructor(
                 athrow
 
                 placeLabel(end)
-                invokevirtual(wrapperType, "initPrototypeMethod", IdFunctionObject::class, Any::class, int, String::class, String::class, int)
+                invokevirtual(
+                    wrapperType,
+                    "initPrototypeMethod",
+                    IdFunctionObject::class,
+                    Any::class,
+                    int,
+                    String::class,
+                    String::class,
+                    int
+                )
                 pop
                 _return
             }
+
+            method(protected, "findPrototypeId", int, String::class) {
+                val default = makeLabel()
+
+                // We always have a custom constructor, even if the user doesn't provide one
+                val labels = (instanceMembers.methods.keys + "constructor").map { it to makeLabel() }
+
+                aload_1
+                invokevirtual<String>("hashCode", int)
+                lookupswitch(
+                    default,
+                    *labels.map { it.first.hashCode() to it.second }.sortedBy { it.first }.toTypedArray()
+                )
+
+                for ((name, label) in labels) {
+                    placeLabel(label)
+                    aload_1
+                    ldc(name)
+                    invokevirtual<String>("equals", boolean, Any::class)
+                    ifStatement(JumpCondition.True) {
+                        val id = instanceMembers.ids[name]
+                        if (id != null) {
+                            push_int(id)
+                        } else {
+                            require(name == "constructor")
+                            push_int(1)
+                        }
+                        ireturn
+                    }
+                    goto(default)
+                }
+
+                placeLabel(default)
+                push_int(0)
+                ireturn
+            }
+
+            method(public, "getClassName", String::class) {
+                ldc(className)
+                areturn
+            }
+
+            // TODO: JVM methods?
+            for ((name, method) in staticMembers.methods) {
+                method(
+                    private + static,
+                    "js_$name",
+                    Any::class,
+                    Context::class,
+                    Scriptable::class,
+                    Scriptable::class,
+                    Array<Any>::class,
+                ) {
+
+                    getstatic(wrapperType, "staticImpl", NativeObject::class)
+                    ldc(name)
+                    invokeinterface<Map<*, *>>("get", Any::class, Any::class)
+                    checkcast<Function>()
+                    aload_0
+                    aload_1
+                    aload_2
+                    aload_3
+                    invokeinterface<Function>(
+                        "call",
+                        Any::class,
+                        Context::class,
+                        Scriptable::class,
+                        Scriptable::class,
+                        Array<Any>::class
+                    )
+                    areturn
+                }
+            }
+
+            //     method(
+            //         private,
+            //         "js_construct",
+            //         wrapperType,
+            //         Context::class,
+            //         Scriptable::class,
+            //         Scriptable::class,
+            //         Array<Any>::class
+            //     ) {
+            //         aload_3
+            //         ifStatement(JumpCondition.NonNull) {
+            //             ldc("msg.no.new")
+            //             ldc(wrapperName)
+            //             invokestatic<ScriptRuntime>("typeError1", EcmaError::class, String::class, Any::class)
+            //             athrow
+            //         }
+            //
+            //
+            //     }
         }
 
         return cl.load(node)
     }
 
     private fun generateBackingClass(): Class<*> {
+        var modifiers: Modifiers = public
+        if (isAbstract)
+            modifiers += abstract
+
         val node = assembleClass(
-            public,
+            modifiers,
             backingType,
             version = Opcodes.V17,
             superClass = superClass,
@@ -547,11 +786,59 @@ class ClassExtender private constructor(
     }
 
     companion object {
+        private const val GENERATED_PACKAGE = "com/chattriggers/ctjs/internal/engine"
         private var counter = 0
 
         @JvmStatic
-        fun extend(superClassArg: Class<*>?, interfaces: List<Class<*>>, impl: NativeObject): Any {
-            val superClass = superClassArg ?: Any::class.java
+        fun extend(obj: NativeObject): Any {
+            val superClass = obj.getOrDefault("superClass", Any::class.java)
+            require(superClass is Class<*>) { "If \"superClass\" is provided, it must be a java.lang.Class object" }
+
+            val interfaces = obj.getOrDefault("interfaces", listOf<Class<*>>())
+            require(interfaces is List<*> && interfaces.all { it is Class<*> }) {
+                "If \"interfaces\" are provided, it must be a java.lang.List of java.lang.Class objects"
+            }
+
+            val instanceImpl = obj["instance"]
+            require(instanceImpl == null || instanceImpl is NativeObject) {
+                "The \"instance\" object provided must be a plain object with properties and methods"
+            }
+
+            val staticImpl = obj["static"]
+            require(staticImpl == null || staticImpl is NativeObject) {
+                "The \"static\" object provided must be a plain object with properties and methods"
+            }
+
+            val name = obj.getOrDefault("name", "ExtendedClass$counter")
+            require(name is String) {
+                "If \"name\" is provided, it must be a string"
+            }
+
+            val className = "${GENERATED_PACKAGE.replace('/', '.')}/$name"
+            try {
+                Class.forName(className)
+                throw IllegalArgumentException("Class \"$className\" already exists")
+            } catch (_: ClassNotFoundException) {
+            }
+
+            @Suppress("UNCHECKED_CAST")
+            return extend(
+                name,
+                superClass,
+                interfaces as List<Class<*>>,
+                instanceImpl as NativeObject?,
+                staticImpl as NativeObject?
+            )
+        }
+
+        @JvmStatic
+        private fun extend(
+            name: String,
+            superClass: Class<*>,
+            interfaces: List<Class<*>>,
+            instanceImpl: NativeObject?,
+            staticImpl: NativeObject?
+        ): Any {
             require(!superClass.isInterface && canInherit(superClass)) {
                 "extend()'s superClass argument must be a public, non-final, non-interface class"
             }
@@ -560,7 +847,7 @@ class ClassExtender private constructor(
                 "extend()'s interfaces arguments must be public, non-final, interface classes"
             }
 
-            val extender = ClassExtender(superClass, interfaces, impl)
+            val extender = ClassExtender(name, superClass, interfaces, instanceImpl, staticImpl)
             return extender.generate()
         }
 

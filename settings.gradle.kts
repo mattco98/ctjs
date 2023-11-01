@@ -23,4 +23,5 @@ providers.gradleProperty("supportedMcVersions").get().split(",").forEach { versi
     }
 }
 
+includeBuild("../rhino")
 rootProject.buildFileName = "root.gradle.kts"
