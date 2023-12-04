@@ -1946,9 +1946,9 @@ public final class com/chattriggers/ctjs/api/triggers/ChatTrigger : com/chattrig
 	public final fun setCriteria (Ljava/lang/Object;)Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
 	public final fun setEnd ()Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
 	public final fun setExact ()Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
-	public final fun setFormatted ()V
-	public final fun setFormatted (Z)V
-	public static synthetic fun setFormatted$default (Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;ZILjava/lang/Object;)V
+	public final fun setFormatted ()Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
+	public final fun setFormatted (Z)Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
+	public static synthetic fun setFormatted$default (Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;ZILjava/lang/Object;)Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
 	public final fun setParameter (Ljava/lang/String;)Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
 	public final fun setStart ()Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;
 	public final fun triggerIfCanceled (Z)Lcom/chattriggers/ctjs/api/triggers/ChatTrigger;

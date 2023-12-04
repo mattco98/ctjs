@@ -120,7 +120,7 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
      * behavior of inferring the formatted status from the criteria.
      */
     @JvmOverloads
-    fun setFormatted(formatted: Boolean = true) {
+    fun setFormatted(formatted: Boolean = true) = apply {
         this.formatted = formatted
         this.formattedForced = true
     }
