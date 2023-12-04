@@ -10,7 +10,7 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
     private var formattedForced = false
     private var caseInsensitive: Boolean = false
     private lateinit var criteriaPattern: Regex
-    private val parameters = mutableListOf<Parameter?>()
+    private var parameter: Parameter? = null
     private var triggerIfCanceled: Boolean = true
 
     /**
@@ -83,63 +83,36 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
      * @param parameter the chat parameter to set
      * @return the trigger object for method chaining
      */
-    fun setParameter(parameter: String) = apply {
-        parameters.clear()
-        addParameter(parameter)
-    }
-
-    /**
-     * Sets multiple chat parameters for [Parameter].
-     * Clears current parameter list.
-     * @param parameters the chat parameters to set
-     * @return the trigger object for method chaining
-     */
-    fun setParameters(vararg parameters: String) = apply {
-        this.parameters.clear()
-        addParameters(*parameters)
-    }
-
-    /**
-     * Adds chat parameter for [Parameter].
-     * @param parameter the chat parameter to add
-     * @return the trigger object for method chaining
-     */
-    fun addParameter(parameter: String) = apply {
-        parameters.add(Parameter.getParameterByName(parameter))
-    }
-
-    /**
-     * Adds multiple chat parameters for [Parameter].
-     * @param parameters the chat parameters to add
-     * @return the trigger object for method chaining
-     */
-    fun addParameters(vararg parameters: String) = apply {
-        parameters.forEach(::addParameter)
+    fun setParameter(parameter: String?) = apply {
+        this.parameter = parameter?.let(Parameter::getParameterByName)
     }
 
     /**
      * Adds the "start" parameter
      * @return the trigger object for method chaining
      */
-    fun setStart() = apply {
-        setParameter("start")
-    }
+    fun setStart() = setParameter("start")
 
     /**
      * Adds the "contains" parameter
      * @return the trigger object for method chaining
      */
-    fun setContains() = apply {
-        setParameter("contains")
-    }
+    fun setContains() = setParameter("contains")
 
     /**
      * Adds the "end" parameter
      * @return the trigger object for method chaining
      */
-    fun setEnd() = apply {
-        setParameter("end")
-    }
+    fun setEnd() = setParameter("end")
+
+    /**
+     * Makes the trigger match the entire chat message.
+     *
+     * All this does is clear the parameter; it is equivalent to `setParameter(null)`
+     *
+     * @return the trigger object for method chaining
+     */
+    fun setExact() = setParameter(null)
 
     /**
      * Forces this trigger to be formatted or unformatted. If no argument is
@@ -150,14 +123,6 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
     fun setFormatted(formatted: Boolean = true) {
         this.formatted = formatted
         this.formattedForced = true
-    }
-
-    /**
-     * Makes the trigger match the entire chat message
-     * @return the trigger object for method chaining
-     */
-    fun setExact() = apply {
-        parameters.clear()
     }
 
     /**
@@ -206,29 +171,22 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
      * @param chat the chat message to compare against
      * @return a list of the variables, in order or null if it doesn't match
      */
-    private fun matchesChatCriteria(chat: String): MutableList<Any>? {
-        val regex = criteriaPattern
+    private fun matchesChatCriteria(chat: String): List<Any>? {
+        val matches = criteriaPattern.find(chat)?.groups ?: return null
 
-        if (parameters.isEmpty()) {
-            if (!(regex matches chat)) return null
-        } else {
-            parameters.forEach { parameter ->
-                val first = try {
-                    regex.find(chat)?.groups?.get(0)
-                } catch (e: IndexOutOfBoundsException) {
-                    return null
-                }
+        if (parameter != null) {
+            // This will never be null, as the 0-group is the entire capture, and there must
+            // be a capture here if we haven't already returned
+            val first = matches[0]!!
 
-                when (parameter) {
-                    Parameter.CONTAINS -> if (first == null) return null
-                    Parameter.START -> if (first == null || first.range.first != 0) return null
-                    Parameter.END -> if (first?.range?.last != chat.length) return null
-                    null -> if (!(regex matches chat)) return null
-                }
+            when (parameter) {
+                Parameter.START -> if (first.range.first != 0) return null
+                Parameter.END -> if (first.range.last != chat.length) return null
+                else -> {}
             }
         }
 
-        return regex.find(chat)?.groupValues?.drop(1)?.toMutableList()
+        return matches.drop(0).map { it?.value.orEmpty() }
     }
 
     /**
