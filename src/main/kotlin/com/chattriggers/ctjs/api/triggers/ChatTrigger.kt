@@ -39,9 +39,10 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
                 if (!formattedForced)
                     formatted = ChatLib.FORMATTING_CODE_REGEX in chatCriteria
 
-                val replacedCriteria = Regex.escape(chatCriteria.replace("\n", "->newLine<-"))
-                    .replace(Regex("\\\$\\{[^*]+?}"), "\\\\E(.+)\\\\Q")
-                    .replace(Regex("\\$\\{\\*?}"), "\\\\E(?:.+)\\\\Q")
+                val replacedCriteria = Regex.escape(chatCriteria)
+                    .replace("""\\n""", "\n") // Undo the escaping of '\n'
+                    .replace(Regex("""\$\{[^*]+?}"""), """\\E(.+)\\Q""")
+                    .replace(Regex("""\$\{\*?}"""), """\\E(?:.+)\\Q""")
 
                 if (caseInsensitive)
                     flags.add(RegexOption.IGNORE_CASE)
@@ -177,18 +178,13 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
      * @param args list of arguments as described
      */
     override fun trigger(args: Array<out Any?>) {
-        require(args[0] is Event) {
-            "Argument 1 must be a ChatTrigger.Event"
-        }
-
-        val chatEvent = args[0] as Event
+        val chatEvent = args.firstOrNull() as? Event ?:
+            throw IllegalArgumentException("The first argument must be a ChatTrigger.Event")
 
         if (!triggerIfCanceled && chatEvent.isCancelled()) return
 
         val chatMessage = getChatMessage(chatEvent.message)
-
-        val variables = getVariables(chatMessage) ?: return
-        variables.add(chatEvent)
+        val variables = (getVariables(chatMessage) ?: return) + chatEvent
 
         callMethod(variables.toTypedArray())
     }
@@ -201,9 +197,7 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
 
     // helper method to get the variables to pass through
     private fun getVariables(chatMessage: String) =
-        if (::criteriaPattern.isInitialized)
-            matchesChatCriteria(chatMessage.replace("\n", "->newLine<-"))
-        else ArrayList()
+        if (::criteriaPattern.isInitialized) matchesChatCriteria(chatMessage) else emptyList()
 
     /**
      * A method to check whether a received chat message
