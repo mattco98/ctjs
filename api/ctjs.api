@@ -1374,6 +1374,7 @@ public final class com/chattriggers/ctjs/api/inventory/nbt/NBTTagList : com/chat
 }
 
 public final class com/chattriggers/ctjs/api/message/ChatLib {
+	public static final field FORMATTING_CODE_REGEX Lkotlin/text/Regex;
 	public static final field INSTANCE Lcom/chattriggers/ctjs/api/message/ChatLib;
 	public static final fun actionBar (Ljava/lang/Object;)V
 	public static final fun addColor (Ljava/lang/String;)Ljava/lang/String;

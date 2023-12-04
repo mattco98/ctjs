@@ -1,5 +1,6 @@
 package com.chattriggers.ctjs.api.triggers
 
+import com.chattriggers.ctjs.api.message.ChatLib
 import com.chattriggers.ctjs.api.message.TextComponent
 import org.mozilla.javascript.regexp.NativeRegExp
 
@@ -36,7 +37,7 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
         when (chatCriteria) {
             is String -> {
                 if (!formattedForced)
-                    formatted = Regex("[&\u00a7]") in chatCriteria
+                    formatted = ChatLib.FORMATTING_CODE_REGEX in chatCriteria
 
                 val replacedCriteria = Regex.escape(chatCriteria.replace("\n", "->newLine<-"))
                     .replace(Regex("\\\$\\{[^*]+?}"), "\\\\E(.+)\\\\Q")
@@ -60,7 +61,7 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
                 }
 
                 if (!formattedForced)
-                    formatted = Regex("[&\u00a7]") in source
+                    formatted = ChatLib.FORMATTING_CODE_REGEX in source
             }
             else -> throw IllegalArgumentException("Expected String or Regexp Object")
         }

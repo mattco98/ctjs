@@ -1,9 +1,7 @@
 package com.chattriggers.ctjs.api.message
 
 import com.chattriggers.ctjs.api.client.Client
-import com.chattriggers.ctjs.api.client.Player
 import com.chattriggers.ctjs.api.render.Renderer
-import com.chattriggers.ctjs.engine.printToConsole
 import com.chattriggers.ctjs.internal.listeners.ClientListener
 import com.chattriggers.ctjs.internal.mixins.ChatHudAccessor
 import com.chattriggers.ctjs.internal.utils.asMixin
@@ -19,6 +17,9 @@ import kotlin.math.roundToInt
 object ChatLib {
     private val chatLineIds = mutableMapOf<ChatHudLine, Int>()
     private val chatHudAccessor get() = Client.getChatGui()?.asMixin<ChatHudAccessor>()
+
+    @JvmField
+    val FORMATTING_CODE_REGEX = "[\u00a7&][0-9a-fk-or]".toRegex()
 
     /**
      * Prints text in the chat.
@@ -145,7 +146,7 @@ object ChatLib {
      */
     @JvmStatic
     fun removeFormatting(text: String): String {
-        return text.replace("[\u00a7&][0-9a-fk-or]".toRegex(), "")
+        return text.replace(FORMATTING_CODE_REGEX, "")
     }
 
     /**
