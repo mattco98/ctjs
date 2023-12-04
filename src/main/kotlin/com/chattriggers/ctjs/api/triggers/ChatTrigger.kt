@@ -246,10 +246,7 @@ class ChatTrigger(method: Any, type: ITriggerType) : Trigger(method, type) {
         var names: List<String> = names.asList()
 
         companion object {
-            fun getParameterByName(name: String) =
-                values().find { param ->
-                    param.names.any { it.lowercase() == name }
-                }
+            fun getParameterByName(name: String) = values().first { it.names.contains(name.lowercase()) }
         }
     }
 
